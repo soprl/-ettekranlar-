@@ -148,7 +148,7 @@
     .video-placeholder {
       position: absolute;
       inset: 0;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       background: #1a1a1a;
@@ -261,6 +261,7 @@
         sideVideo.play().catch(() => {});
       };
       sideVideo.addEventListener('loadeddata', showVideo);
+      sideVideo.addEventListener('playing', showVideo);
       sideVideo.addEventListener('canplay', () => sideVideo.play().catch(() => {}));
       sideVideo.addEventListener('error', showPlaceholder);
       if (sideVideo.readyState >= 2) showVideo();
