@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>23.8 — Metrobüs Araç İçi · Avcılar · Zincirlikuyu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-deep: #0a3d62;
+      --blue-dark: #072d4a;
+      --blue-mid: #1565a8;
+      --blue-accent: #2d9cdb;
+      --blue-bright: #5ec4f0;
+      --blue-steel: #1a4f7a;
+      --map-bg: #e4edf5;
+      --panel-bg: #f0f7fc;
+      --text: #0c1e2e;
+      --muted: #6b8499;
+      --line: #b8d0e4;
+      --header-h: 96px;
+      --footer-h: 72px;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Roboto', system-ui, sans-serif;
+      background: var(--blue-dark);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .screen {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--panel-bg);
+    }
+
+    /* —— Üst bar —— */
+    .header {
+      height: var(--header-h);
+      background: linear-gradient(90deg, var(--blue-dark) 0%, var(--blue-deep) 55%, var(--blue-dark) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 36px;
+      gap: 24px;
+      flex-shrink: 0;
+      border-bottom: 5px solid var(--blue-bright);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .metrobus-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--blue-bright);
+      color: var(--blue-dark);
+      padding: 6px 16px 4px;
+      border-radius: 4px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .metrobus-badge span {
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .metrobus-badge strong {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .line-badge {
+      background: var(--blue-steel);
+      border: 2px solid var(--blue-bright);
+      padding: 8px 20px 6px;
+      border-radius: 3px;
+      line-height: 1;
+    }
+
+    .line-number {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--blue-bright);
+      letter-spacing: 0.02em;
+    }
+
+    .route-name {
+      font-size: 2.35rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      line-height: 1.1;
+    }
+
+    .header-side {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .header-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--blue-bright);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .clock {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* —— Gövde —— */
+    .body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 48% 52%;
+      min-height: 0;
+    }
+
+    /* Sol: güzergah */
+    .route-map {
+      background: var(--map-bg);
+      padding: 24px 32px 18px 40px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border-right: 4px solid var(--blue-accent);
+    }
+
+    .route-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--blue-mid);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 16px;
+    }
+
+    .route-inner {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      column-gap: 20px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .rail {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .rail-line {
+      position: absolute;
+      top: 10px;
+      bottom: 26px;
+      left: 50%;
+      width: 8px;
+      background: linear-gradient(180deg, var(--blue-accent) 0%, var(--blue-mid) 100%);
+      transform: translateX(-50%);
+      border-radius: 4px;
+    }
+
+    .rail-arrow {
+      margin-top: auto;
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 14px solid var(--blue-mid);
+    }
+
+    .rail-markers {
+      list-style: none;
+      flex: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 1;
+      padding: 6px 0 18px;
+    }
+
+    .rail-markers li {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 0;
+      position: relative;
+    }
+
+    .marker {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--line);
+      flex-shrink: 0;
+      transition: transform 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .marker.passed { background: #a8b2bc; }
+
+    .marker.active {
+      width: 28px;
+      height: 28px;
+      background: var(--panel-bg);
+      border: 5px solid var(--blue-mid);
+      box-shadow: 0 0 0 3px var(--blue-bright);
+    }
+
+    .stop-rows {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 2px 0 16px;
+    }
+
+    .stop-row {
+      display: flex;
+      align-items: center;
+      min-height: 0;
+    }
+
+    .stop-label {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: clamp(1.1rem, 2.2vh, 1.85rem);
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      line-height: 1.2;
+      transition: color 0.35s ease, font-weight 0.35s ease, font-size 0.35s ease;
+    }
+
+    .stop-row.active .stop-label {
+      font-size: clamp(1.35rem, 2.8vh, 2.35rem);
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    .stop-row.passed .stop-label { color: #b8c0c8; }
+
+    /* Sağ: sonraki durak */
+    .info {
+      background: var(--panel-bg);
+      padding: 52px 48px 40px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 0;
+    }
+
+    .info-label {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--blue-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .info-value {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+      transition: opacity 0.25s ease;
+    }
+
+    .info-value.dim { opacity: 0; }
+
+    .next-name {
+      font-size: clamp(4.5rem, 11vh, 7.5rem);
+      word-wrap: break-word;
+    }
+
+    .info-rule {
+      height: 3px;
+      background: var(--line);
+      margin: 40px 0 36px;
+      max-width: 420px;
+    }
+
+    .remain-num {
+      font-size: clamp(5.5rem, 14vh, 9rem);
+      font-variant-numeric: tabular-nums;
+      color: var(--blue-mid);
+    }
+
+    /* —— Alt bar —— */
+    .footer {
+      height: var(--footer-h);
+      background: var(--blue-dark);
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      border-top: 3px solid var(--blue-bright);
+    }
+
+    .footer-icon {
+      width: 48px;
+      height: 48px;
+      margin-left: 28px;
+      margin-right: 12px;
+      flex-shrink: 0;
+      filter: brightness(0) invert(1);
+      opacity: 0.9;
+    }
+
+    .ticker-wrap {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .ticker {
+      display: inline-flex;
+      flex-shrink: 0;
+      width: max-content;
+      white-space: nowrap;
+      animation: ticker-scroll 28s linear infinite;
+    }
+
+    .ticker-text {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-right: 5rem;
+    }
+
+    @keyframes ticker-scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+  </style>
+</head>
+<body>
+  <div class="screen">
+    <header class="header">
+      <div class="header-brand">
+        <div class="metrobus-badge" aria-hidden="true">
+          <span>İstanbul</span>
+          <strong>MB</strong>
+        </div>
+        <div class="line-badge"><span class="line-number">34</span></div>
+        <h1 class="route-name">Avcılar — Zincirlikuyu</h1>
+      </div>
+      <div class="header-side">
+        <span class="header-tag">Araç içi ekran</span>
+        <time class="clock" id="clock">10:24</time>
+      </div>
+    </header>
+
+    <div class="body">
+      <section class="route-map" aria-label="Güzergah">
+        <p class="route-title">Metrobüs güzergahı</p>
+        <div class="route-inner">
+          <div class="rail" aria-hidden="true">
+            <div class="rail-line"></div>
+            <ul class="rail-markers" id="markers"></ul>
+            <div class="rail-arrow"></div>
+          </div>
+          <ul class="stop-rows" id="stopRows"></ul>
+        </div>
+      </section>
+
+      <section class="info" aria-label="Durak bilgisi">
+        <p class="info-label">Sonraki Durak</p>
+        <p class="info-value next-name" id="nextStop">AVCILAR</p>
+        <div class="info-rule"></div>
+        <p class="info-label">Kalan Durak</p>
+        <p class="info-value remain-num" id="remaining">10</p>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <img class="footer-icon" src="public-relation.png" alt="">
+      <div class="ticker-wrap">
+        <div class="ticker" aria-hidden="true">
+          <span class="ticker-text">Metrobüs hattında yoğun saatlerde sefer aralığı 2 dakikaya indirildi. · </span>
+          <span class="ticker-text">Bilet kontrolünde İstanbulkart veya mobil bilet kullanabilirsiniz. · </span>
+          <span class="ticker-text">Lütfen engelli, yaşlı ve hamile yolculara yer veriniz. · </span>
+          <span class="ticker-text">Metrobüs duraklarında güvenliğiniz için sarı çizgiye basmayınız. · </span>
+          <span class="ticker-text">Metrobüs hattında yoğun saatlerde sefer aralığı 2 dakikaya indirildi. · </span>
+          <span class="ticker-text">Bilet kontrolünde İstanbulkart veya mobil bilet kullanabilirsiniz. · </span>
+          <span class="ticker-text">Lütfen engelli, yaşlı ve hamile yolculara yer veriniz. · </span>
+          <span class="ticker-text">Metrobüs duraklarında güvenliğiniz için sarı çizgiye basmayınız. · </span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const STOPS = [
+      'AVCILAR',
+      'KÜÇÜKÇEKMECE',
+      'BEŞYOL',
+      'ŞİRİNEVLER',
+      'ZEYTİNBURNU',
+      'TOPKAPI',
+      'AYVANSARAY',
+      'DARÜLACEZE',
+      'ÇAĞLAYAN',
+      'ZİNCİRLİKUYU'
+    ];
+
+    const INTERVAL_MS = 15000;
+    const START_HOUR = 10;
+    const START_MINUTE = 24;
+
+    let approachIndex = 0;
+    let extraMinutes = 0;
+
+    const markersEl = document.getElementById('markers');
+    const stopRowsEl = document.getElementById('stopRows');
+    const nextStopEl = document.getElementById('nextStop');
+    const remainingEl = document.getElementById('remaining');
+    const clockEl = document.getElementById('clock');
+
+    function formatClock() {
+      const total = START_MINUTE + extraMinutes;
+      const h = START_HOUR + Math.floor(total / 60);
+      const m = total % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    function remainingStops() {
+      return Math.max(0, STOPS.length - approachIndex);
+    }
+
+    function setValue(el, text) {
+      el.classList.add('dim');
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          el.textContent = text;
+          el.classList.remove('dim');
+        }, 180);
+      });
+    }
+
+    function renderRoute() {
+      markersEl.innerHTML = STOPS.map((_, i) => {
+        let cls = 'marker';
+        if (i < approachIndex) cls += ' passed';
+        else if (i === approachIndex) cls += ' active';
+        return `<li><span class="${cls}"></span></li>`;
+      }).join('');
+
+      stopRowsEl.innerHTML = STOPS.map((name, i) => {
+        let cls = 'stop-row';
+        if (i < approachIndex) cls += ' passed';
+        else if (i === approachIndex) cls += ' active';
+        return `<li class="${cls}"><span class="stop-label">${name}</span></li>`;
+      }).join('');
+    }
+
+    function refresh() {
+      const name = approachIndex >= STOPS.length
+        ? 'SON DURAK'
+        : STOPS[approachIndex];
+
+      setValue(nextStopEl, name);
+      setValue(remainingEl, String(remainingStops()));
+      clockEl.textContent = formatClock();
+      renderRoute();
+    }
+
+    function advance() {
+      if (approachIndex >= STOPS.length - 1) return;
+      approachIndex += 1;
+      extraMinutes += 1;
+      refresh();
+    }
+
+    refresh();
+    setInterval(advance, INTERVAL_MS);
+  </script>
+</body>
+</html>

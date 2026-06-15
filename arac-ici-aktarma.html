@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>İETT — Araç İçi · Aktarma Bilgisi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700;900&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --iett-yellow: #ffc80a;
+      --iett-yellow-dark: #e5b000;
+      --iett-yellow-bar: #f0d050;
+      --iett-badge: #9a7209;
+      --iett-black: #1a1a1a;
+      --iett-cream: #fffbf0;
+      --iett-panel: #ffffff;
+      --iett-map: #f3ebe0;
+      --iett-muted: #6b6b6b;
+      --iett-line: #d4c8bc;
+      --metro-m2: #0080c8;
+      --metrobus: #e4002b;
+      --ferry: #0077b6;
+      --tram: #8b4513;
+      --header-h: 104px;
+      --footer-h: 72px;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      background: #2a2a2a;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .viewport {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #2a2a2a;
+    }
+
+    .screen {
+      width: 1920px;
+      height: 1080px;
+      flex-shrink: 0;
+      transform-origin: center center;
+      display: flex;
+      flex-direction: column;
+      background: var(--iett-panel);
+      overflow: hidden;
+    }
+
+    /* ── Üst şerit ── */
+    .header {
+      height: var(--header-h);
+      background: var(--iett-yellow);
+      border-bottom: 4px solid var(--iett-yellow-dark);
+      display: flex;
+      align-items: center;
+      padding: 0 40px;
+      gap: 28px;
+      flex-shrink: 0;
+    }
+
+    .bus-icon {
+      width: 60px;
+      height: 60px;
+      flex-shrink: 0;
+    }
+
+    .bus-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: brightness(0);
+      opacity: 0.88;
+    }
+
+    .line-badge {
+      background: var(--iett-badge);
+      padding: 12px 28px 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .line-badge span {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 64px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+
+    .route-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .route-info h1 {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 52px;
+      font-weight: 700;
+      color: var(--iett-black);
+      letter-spacing: 0.03em;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .route-info p {
+      font-size: 22px;
+      font-weight: 600;
+      color: rgba(26, 26, 26, 0.65);
+      margin-top: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .clock {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--iett-black);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+
+    /* ── Ana gövde ── */
+    .body {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* Sol: yolculuk özeti */
+    .journey {
+      background: var(--iett-map);
+      border-right: 4px solid var(--iett-yellow-dark);
+      padding: 48px 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .journey-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--iett-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 36px;
+    }
+
+    .stop-card {
+      display: flex;
+      align-items: stretch;
+      gap: 28px;
+      padding: 28px 0;
+      border-bottom: 2px solid var(--iett-line);
+      opacity: 0.45;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .stop-card:last-child { border-bottom: none; }
+
+    .stop-card.current {
+      opacity: 1;
+      transform: scale(1.02);
+      transform-origin: left center;
+    }
+
+    .stop-card.next { opacity: 0.85; }
+    .stop-card.upcoming { opacity: 0.55; }
+
+    .stop-rail {
+      width: 32px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 8px;
+    }
+
+    .stop-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--iett-line);
+      border: 4px solid var(--iett-panel);
+      flex-shrink: 0;
+      transition: background 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .stop-card.current .stop-dot {
+      background: var(--iett-yellow);
+      border-color: var(--iett-black);
+      box-shadow: 0 0 0 6px rgba(255, 200, 10, 0.35);
+    }
+
+    .stop-card.next .stop-dot {
+      background: var(--iett-yellow-dark);
+      border-color: var(--iett-panel);
+    }
+
+    .stop-rail-line {
+      flex: 1;
+      width: 4px;
+      background: var(--iett-line);
+      margin-top: 8px;
+    }
+
+    .stop-card:last-child .stop-rail-line { display: none; }
+
+    .stop-content { flex: 1; min-width: 0; }
+
+    .stop-tag {
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--iett-muted);
+      margin-bottom: 6px;
+    }
+
+    .stop-card.current .stop-tag {
+      color: var(--iett-badge);
+    }
+
+    .stop-name {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 56px;
+      font-weight: 700;
+      color: var(--iett-black);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      line-height: 1.05;
+      transition: font-size 0.4s ease;
+    }
+
+    .stop-card.current .stop-name {
+      font-size: 72px;
+    }
+
+    .stop-transfer-hint {
+      margin-top: 10px;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--iett-muted);
+      display: none;
+    }
+
+    .stop-card.next .stop-transfer-hint,
+    .stop-card.current .stop-transfer-hint.has-transfer {
+      display: block;
+    }
+
+    /* Sağ: aktarma detay */
+    .transfer-panel {
+      background: var(--iett-cream);
+      padding: 48px 64px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .transfer-panel.idle .transfer-active { display: none; }
+    .transfer-panel.idle .transfer-idle { display: flex; }
+    .transfer-panel.active .transfer-active { display: flex; }
+    .transfer-panel.active .transfer-idle { display: none; }
+
+    .transfer-idle {
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 24px;
+    }
+
+    .transfer-idle-icon {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--iett-yellow);
+      display: grid;
+      place-items: center;
+      font-size: 56px;
+    }
+
+    .transfer-idle h2 {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 44px;
+      font-weight: 700;
+      color: var(--iett-black);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .transfer-idle p {
+      font-size: 26px;
+      color: var(--iett-muted);
+      max-width: 520px;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    .transfer-active {
+      flex: 1;
+      flex-direction: column;
+      animation: panel-in 0.55s ease;
+    }
+
+    @keyframes panel-in {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .transfer-alert {
+      background: var(--iett-black);
+      color: var(--iett-yellow);
+      padding: 18px 32px;
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+      align-self: flex-start;
+    }
+
+    .transfer-stop-name {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 88px;
+      font-weight: 900;
+      color: var(--iett-black);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      margin-bottom: 48px;
+    }
+
+    .transfer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      flex: 1;
+    }
+
+    .transfer-item {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      background: var(--iett-panel);
+      border: 3px solid var(--iett-line);
+      border-left-width: 8px;
+      padding: 28px 32px;
+      border-radius: 4px;
+      transition: border-color 0.3s ease;
+    }
+
+    .transfer-item[data-type="metro"] { border-left-color: var(--metro-m2); }
+    .transfer-item[data-type="metrobus"] { border-left-color: var(--metrobus); }
+    .transfer-item[data-type="ferry"] { border-left-color: var(--ferry); }
+    .transfer-item[data-type="tram"] { border-left-color: var(--tram); }
+
+    .transfer-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 36px;
+      font-weight: 900;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .transfer-item[data-type="metro"] .transfer-icon { background: var(--metro-m2); }
+    .transfer-item[data-type="metrobus"] .transfer-icon { background: var(--metrobus); }
+    .transfer-item[data-type="ferry"] .transfer-icon { background: var(--ferry); }
+    .transfer-item[data-type="tram"] .transfer-icon { background: var(--tram); }
+
+    .transfer-details h3 {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--iett-black);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+    }
+
+    .transfer-details p {
+      font-size: 24px;
+      color: var(--iett-muted);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    .transfer-walk {
+      margin-top: auto;
+      padding: 20px 28px;
+      background: rgba(255, 200, 10, 0.25);
+      border: 2px solid var(--iett-yellow-dark);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--iett-black);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Alt duyuru ── */
+    .footer {
+      height: var(--footer-h);
+      background: var(--iett-yellow);
+      border-top: 4px solid var(--iett-yellow-dark);
+      display: flex;
+      align-items: stretch;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .footer-badge {
+      width: 160px;
+      background: var(--iett-black);
+      color: var(--iett-yellow);
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .ticker-viewport {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .ticker-scroll {
+      display: inline-flex;
+      align-items: center;
+      height: var(--footer-h);
+      white-space: nowrap;
+      animation: ticker 40s linear infinite;
+    }
+
+    .ticker-scroll span {
+      padding: 0 48px;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--iett-black);
+    }
+
+    .ticker-scroll span::before {
+      content: '◆';
+      margin-right: 28px;
+      font-size: 14px;
+    }
+
+    @keyframes ticker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+  </style>
+</head>
+<body>
+  <div class="viewport">
+    <div class="screen" id="screen">
+      <header class="header">
+        <div class="bus-icon">
+          <img src="front-of-bus.png" alt="">
+        </div>
+        <div class="line-badge"><span>34E</span></div>
+        <div class="route-info">
+          <h1>Taksim — Kadıköy</h1>
+          <p>Araç içi bilgilendirme · Aktarma</p>
+        </div>
+        <time class="clock" id="clock">14:32</time>
+      </header>
+
+      <div class="body">
+        <section class="journey" id="journey" aria-label="Güzergah özeti"></section>
+
+        <section class="transfer-panel idle" id="transferPanel" aria-label="Aktarma bilgisi">
+          <div class="transfer-idle">
+            <div class="transfer-idle-icon">↔</div>
+            <h2>Aktarma bilgisi</h2>
+            <p>Aktarmalı duraklara yaklaşıldığında bağlantı hatları bu alanda gösterilir.</p>
+          </div>
+          <div class="transfer-active">
+            <div class="transfer-alert" id="transferAlert">Sonraki durakta aktarma</div>
+            <div class="transfer-stop-name" id="transferStopName">—</div>
+            <div class="transfer-list" id="transferList"></div>
+            <div class="transfer-walk" id="transferWalk"></div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <div class="footer-badge">DUYURU</div>
+        <div class="ticker-viewport">
+          <div class="ticker-scroll" aria-hidden="true">
+            <span>34E hattı Taksim — Kadıköy güzergâhında hizmet vermektedir.</span>
+            <span>İstanbulkart ile tüm toplu taşımada geçerlidir.</span>
+            <span>Aktarma noktalarında yönlendirme tabelalarını takip ediniz.</span>
+            <span>34E hattı Taksim — Kadıköy güzergâhında hizmet vermektedir.</span>
+            <span>Lütfen engelli, yaşlı ve hamile yolculara yer veriniz.</span>
+            <span>Aktarma noktalarında yönlendirme tabelalarını takip ediniz.</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const STOPS = [
+      { name: 'TAKSİM', transfer: null },
+      { name: 'BEŞİKTAŞ', transfer: null },
+      {
+        name: 'ZİNCİRLİKUYU',
+        transfer: {
+          alert: 'Sonraki durakta aktarma',
+          walk: 'Aktarma noktasına yürüme mesafesi: yaklaşık 2 dakika',
+          lines: [
+            { type: 'metro', code: 'M2', title: 'M2 Yenikapı — Hacıosman', sub: 'Metrobüs durağından metro istasyonuna' },
+            { type: 'metrobus', code: 'MB', title: 'Metrobüs hattı', sub: 'Avcılar — Söğütlüçeşme yönü' },
+          ],
+        },
+      },
+      { name: 'ÜSKÜDAR', transfer: null },
+      {
+        name: 'ALTUNİZADE',
+        transfer: {
+          alert: 'Aktarmalı durak',
+          walk: 'Metrobüs durağı aynı peronda',
+          lines: [
+            { type: 'metrobus', code: 'MB', title: 'Metrobüs · Uzunçayır', sub: 'Kadıköy ve Avrupa yakası bağlantısı' },
+          ],
+        },
+      },
+      {
+        name: 'KADIKÖY',
+        transfer: {
+          alert: 'Son durak · aktarma noktası',
+          walk: 'İskele yürüme mesafesi: 3 dakika',
+          lines: [
+            { type: 'ferry', code: 'İDO', title: 'Vapur iskelesi', sub: 'Eminönü · Karaköy · Beşiktaş hatları' },
+            { type: 'tram', code: 'T3', title: 'Moda tramvayı', sub: 'Kadıköy — Moda hattı' },
+          ],
+        },
+      },
+    ];
+
+    const TICK_MS = 15000;
+    let idx = 1;
+    let extraMin = 0;
+    const START = { h: 14, m: 32 };
+
+    const journeyEl = document.getElementById('journey');
+    const panelEl = document.getElementById('transferPanel');
+    const transferStopName = document.getElementById('transferStopName');
+    const transferList = document.getElementById('transferList');
+    const transferWalk = document.getElementById('transferWalk');
+    const transferAlert = document.getElementById('transferAlert');
+    const clockEl = document.getElementById('clock');
+    const screenEl = document.getElementById('screen');
+
+    function fit() {
+      const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+      screenEl.style.transform = `scale(${s})`;
+    }
+
+    function clock() {
+      const t = START.m + extraMin;
+      clockEl.textContent =
+        `${String(START.h + Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+    }
+
+    function renderJourney() {
+      const cards = [];
+      const current = STOPS[idx];
+      const next = STOPS[(idx + 1) % STOPS.length];
+      const upcoming = STOPS[(idx + 2) % STOPS.length];
+
+      if (current) cards.push({ stop: current, role: 'current', tag: 'Şu anki durak' });
+      if (next) cards.push({ stop: next, role: 'next', tag: 'Sonraki durak' });
+      if (upcoming) cards.push({ stop: upcoming, role: 'upcoming', tag: 'İleri durak' });
+
+      journeyEl.innerHTML = `
+        <p class="journey-label">Güzergâh özeti</p>
+        ${cards.map(({ stop, role, tag }) => `
+          <article class="stop-card ${role}">
+            <div class="stop-rail">
+              <span class="stop-dot"></span>
+              <span class="stop-rail-line"></span>
+            </div>
+            <div class="stop-content">
+              <p class="stop-tag">${tag}</p>
+              <h2 class="stop-name">${stop.name}</h2>
+              ${stop.transfer
+                ? `<p class="stop-transfer-hint has-transfer">↔ Aktarmalı durak</p>`
+                : `<p class="stop-transfer-hint">Doğrudan sefer</p>`}
+            </div>
+          </article>
+        `).join('')}
+      `;
+    }
+
+    function renderTransfer() {
+      const next = STOPS[(idx + 1) % STOPS.length];
+      if (!next || !next.transfer) {
+        panelEl.className = 'transfer-panel idle';
+        return;
+      }
+
+      panelEl.className = 'transfer-panel active';
+      const activeEl = panelEl.querySelector('.transfer-active');
+      activeEl.style.animation = 'none';
+      void activeEl.offsetWidth;
+      activeEl.style.animation = '';
+      transferAlert.textContent = next.transfer.alert;
+      transferStopName.textContent = next.name;
+      transferWalk.textContent = next.transfer.walk;
+      transferList.innerHTML = next.transfer.lines.map((l) => `
+        <div class="transfer-item" data-type="${l.type}">
+          <div class="transfer-icon">${l.code}</div>
+          <div class="transfer-details">
+            <h3>${l.title}</h3>
+            <p>${l.sub}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function refresh() {
+      clock();
+      renderJourney();
+      renderTransfer();
+    }
+
+    function advance() {
+      idx = (idx + 1) % STOPS.length;
+      if (idx === 0) extraMin = 0;
+      else extraMin += 2;
+      refresh();
+    }
+
+    function loop() {
+      advance();
+      setTimeout(loop, TICK_MS);
+    }
+
+    fit();
+    window.addEventListener('resize', fit);
+    refresh();
+    setTimeout(loop, TICK_MS);
+  </script>
+</body>
+</html>

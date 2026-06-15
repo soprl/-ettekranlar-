@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>İETT — Araç İçi · Son Durağa Kalan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700;900&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --iett-yellow: #ffc80a;
+      --iett-yellow-dark: #e5b000;
+      --iett-badge: #9a7209;
+      --iett-black: #1a1a1a;
+      --iett-cream: #fffbf0;
+      --iett-panel: #ffffff;
+      --iett-map: #f3ebe0;
+      --iett-muted: #6b6b6b;
+      --iett-line: #d4c8bc;
+      --warn: #e85d04;
+      --warn-bg: #fff4ec;
+      --urgent: #c1121f;
+      --urgent-bg: #fde8ea;
+      --header-h: 104px;
+      --footer-h: 72px;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      background: #2a2a2a;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .viewport {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #2a2a2a;
+    }
+
+    .screen {
+      width: 1920px;
+      height: 1080px;
+      flex-shrink: 0;
+      transform-origin: center center;
+      display: flex;
+      flex-direction: column;
+      background: var(--iett-panel);
+      overflow: hidden;
+      transition: background 0.5s ease;
+    }
+
+    .screen.phase-warn { background: var(--warn-bg); }
+    .screen.phase-urgent { background: var(--urgent-bg); }
+    .screen.phase-final { background: var(--iett-yellow); }
+
+    .header {
+      height: var(--header-h);
+      background: var(--iett-yellow);
+      border-bottom: 4px solid var(--iett-yellow-dark);
+      display: flex;
+      align-items: center;
+      padding: 0 40px;
+      gap: 28px;
+      flex-shrink: 0;
+      transition: background 0.5s ease;
+    }
+
+    .screen.phase-final .header {
+      background: var(--iett-black);
+      border-bottom-color: #333;
+    }
+
+    .screen.phase-final .route-info h1,
+    .screen.phase-final .clock { color: var(--iett-yellow); }
+    .screen.phase-final .route-info p { color: rgba(255, 200, 10, 0.7); }
+    .screen.phase-final .bus-icon img { filter: brightness(0) invert(1); opacity: 1; }
+    .screen.phase-final .line-badge { background: var(--iett-yellow); }
+    .screen.phase-final .line-badge span { color: var(--iett-black); }
+
+    .bus-icon { width: 60px; height: 60px; flex-shrink: 0; }
+    .bus-icon img {
+      width: 100%; height: 100%; object-fit: contain;
+      filter: brightness(0); opacity: 0.88;
+    }
+
+    .line-badge {
+      background: var(--iett-badge);
+      padding: 12px 28px 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .line-badge span {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 64px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .route-info { flex: 1; min-width: 0; }
+
+    .route-info h1 {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 52px;
+      font-weight: 700;
+      color: var(--iett-black);
+      letter-spacing: 0.03em;
+      line-height: 1.1;
+    }
+
+    .route-info p {
+      font-size: 22px;
+      font-weight: 600;
+      color: rgba(26, 26, 26, 0.65);
+      margin-top: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .clock {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--iett-black);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+
+    .main {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .countdown-side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 48px;
+      border-right: 4px solid var(--iett-yellow-dark);
+      background: inherit;
+    }
+
+    .screen.phase-final .countdown-side {
+      border-right-color: rgba(0, 0, 0, 0.15);
+    }
+
+    .alert-label {
+      font-size: 26px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--iett-muted);
+      margin-bottom: 20px;
+      text-align: center;
+      transition: color 0.4s ease;
+    }
+
+    .screen.phase-warn .alert-label { color: var(--warn); }
+    .screen.phase-urgent .alert-label { color: var(--urgent); }
+    .screen.phase-final .alert-label { color: var(--iett-black); }
+
+    .count-block { text-align: center; }
+
+    .count-num {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 260px;
+      font-weight: 900;
+      line-height: 1;
+      color: var(--iett-black);
+      font-variant-numeric: tabular-nums;
+      transition: color 0.4s ease;
+    }
+
+    .count-num.pulse { animation: count-pulse 0.7s ease; }
+
+    @keyframes count-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .screen.phase-warn .count-num { color: var(--warn); }
+    .screen.phase-urgent .count-num { color: var(--urgent); }
+
+    .count-unit {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 64px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--iett-black);
+      margin-top: 4px;
+    }
+
+    .screen.phase-warn .count-unit { color: var(--warn); }
+    .screen.phase-urgent .count-unit { color: var(--urgent); }
+
+    .final-block {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .screen.phase-final .count-block { display: none; }
+    .screen.phase-final .final-block { display: flex; }
+
+    .final-main {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 160px;
+      font-weight: 900;
+      color: var(--iett-black);
+      letter-spacing: 0.04em;
+      line-height: 1;
+      animation: final-pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes final-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+
+    .final-sub {
+      font-size: 56px;
+      font-weight: 900;
+      color: var(--iett-black);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .progress-bar {
+      margin-top: 40px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 720px;
+    }
+
+    .progress-step {
+      width: 56px;
+      height: 10px;
+      background: var(--iett-yellow-dark);
+      border-radius: 2px;
+      opacity: 0.2;
+      transition: opacity 0.35s ease, background 0.35s ease, transform 0.35s ease;
+    }
+
+    .progress-step.done { opacity: 0.5; background: var(--iett-black); }
+    .progress-step.current { opacity: 1; transform: scaleY(1.4); background: var(--iett-yellow-dark); }
+    .progress-step.current.warn { background: var(--warn); }
+    .progress-step.current.urgent { background: var(--urgent); }
+    .progress-step.current.final { background: var(--iett-black); }
+
+    .dest-side {
+      display: flex;
+      flex-direction: column;
+      padding: 48px 64px;
+      background: var(--iett-cream);
+      min-height: 0;
+    }
+
+    .screen.phase-warn .dest-side { background: #fff8f2; }
+    .screen.phase-urgent .dest-side { background: #fff0f2; }
+    .screen.phase-final .dest-side { background: var(--iett-panel); }
+
+    .dest-label {
+      font-size: 20px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--iett-muted);
+      margin-bottom: 12px;
+    }
+
+    .dest-name {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 108px;
+      font-weight: 900;
+      color: var(--iett-black);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      margin-bottom: 32px;
+    }
+
+    .screen.phase-final .dest-name { font-size: 120px; }
+
+    .dest-divider {
+      height: 4px;
+      background: var(--iett-yellow-dark);
+      margin-bottom: 28px;
+      max-width: 100%;
+    }
+
+    .now-row {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .now-tag {
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--iett-badge);
+      background: rgba(255, 200, 10, 0.35);
+      padding: 8px 16px;
+      border-radius: 3px;
+    }
+
+    .now-name {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 52px;
+      font-weight: 700;
+      color: var(--iett-black);
+      text-transform: uppercase;
+    }
+
+    .route-strip {
+      flex: 1;
+      min-height: 0;
+      background: var(--iett-map);
+      border: 2px solid var(--iett-line);
+      border-radius: 4px;
+      padding: 20px 24px;
+      overflow: hidden;
+    }
+
+    .route-strip-label {
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--iett-muted);
+      margin-bottom: 16px;
+    }
+
+    .route-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .route-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--iett-line);
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--iett-muted);
+      text-transform: uppercase;
+      transition: color 0.3s ease, font-size 0.3s ease;
+    }
+
+    .route-item:last-child { border-bottom: none; }
+
+    .route-item .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--iett-line);
+      flex-shrink: 0;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .route-item.passed { opacity: 0.45; }
+    .route-item.passed .dot { background: var(--iett-muted); }
+
+    .route-item.current {
+      color: var(--iett-black);
+      font-size: 32px;
+      font-weight: 900;
+    }
+
+    .route-item.current .dot {
+      background: var(--iett-yellow);
+      border: 3px solid var(--iett-black);
+      box-shadow: 0 0 0 4px rgba(255, 200, 10, 0.4);
+    }
+
+    .route-item.final-stop {
+      color: var(--iett-badge);
+      font-weight: 900;
+    }
+
+    .route-item.final-stop .dot {
+      background: var(--iett-badge);
+    }
+
+    .footer {
+      height: var(--footer-h);
+      background: var(--iett-yellow);
+      border-top: 4px solid var(--iett-yellow-dark);
+      display: flex;
+      align-items: stretch;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .screen.phase-final .footer {
+      background: var(--iett-black);
+      border-top-color: #333;
+    }
+
+    .footer-badge {
+      width: 160px;
+      background: var(--iett-black);
+      color: var(--iett-yellow);
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .screen.phase-final .footer-badge {
+      background: var(--iett-yellow);
+      color: var(--iett-black);
+    }
+
+    .ticker-scroll {
+      display: inline-flex;
+      align-items: center;
+      height: var(--footer-h);
+      white-space: nowrap;
+      animation: ticker 38s linear infinite;
+    }
+
+    .ticker-scroll span {
+      padding: 0 48px;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--iett-black);
+    }
+
+    .screen.phase-final .ticker-scroll span { color: var(--iett-yellow); }
+
+    .ticker-scroll span::before {
+      content: '◆';
+      margin-right: 28px;
+      font-size: 14px;
+    }
+
+    @keyframes ticker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+  </style>
+</head>
+<body>
+  <div class="viewport">
+    <div class="screen" id="screen">
+      <header class="header">
+        <div class="bus-icon"><img src="front-of-bus.png" alt=""></div>
+        <div class="line-badge"><span>500T</span></div>
+        <div class="route-info">
+          <h1>Tuzla Şifa — 4. Levent Metro</h1>
+          <p>Araç içi bilgilendirme · Son durağa kalan</p>
+        </div>
+        <time class="clock" id="clock">08:06</time>
+      </header>
+
+      <div class="main">
+        <section class="countdown-side">
+          <p class="alert-label" id="alertLabel">Son durağa kalan</p>
+
+          <div class="count-block">
+            <div class="count-num" id="countNum">10</div>
+            <div class="count-unit" id="countUnit">durak</div>
+          </div>
+
+          <div class="final-block">
+            <div class="final-main">SON DURAK</div>
+            <div class="final-sub" id="finalName">4. LEVENT</div>
+          </div>
+
+          <div class="progress-bar" id="progressBar"></div>
+        </section>
+
+        <section class="dest-side">
+          <p class="dest-label">Güzergâh sonu</p>
+          <h2 class="dest-name" id="destName">4. LEVENT</h2>
+          <div class="dest-divider"></div>
+
+          <div class="now-row">
+            <span class="now-tag" id="nowTag">Sonraki durak</span>
+            <span class="now-name" id="nowName">TUZLA ŞİFA</span>
+          </div>
+
+          <div class="route-strip">
+            <p class="route-strip-label">Güzergâh</p>
+            <ul class="route-list" id="routeList"></ul>
+          </div>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <div class="footer-badge">DUYURU</div>
+        <div style="flex:1;overflow:hidden">
+          <div class="ticker-scroll" aria-hidden="true">
+            <span>500T hattı Tuzla Şifa Mahallesi — 4. Levent Metro güzergâhında hizmet vermektedir.</span>
+            <span>Lütfen engelli, yaşlı ve hamile yolculara yer veriniz.</span>
+            <span>Otobüs hareket halindeyken tutamaklara tutununuz.</span>
+            <span>500T hattı Tuzla Şifa Mahallesi — 4. Levent Metro güzergâhında hizmet vermektedir.</span>
+            <span>Lütfen engelli, yaşlı ve hamile yolculara yer veriniz.</span>
+            <span>Otobüs hareket halindeyken tutamaklara tutununuz.</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    /* 500T — Tuzla Şifa · 4. Levent Metro (10 ana durak) */
+    const STOPS = [
+      'TUZLA ŞİFA',
+      'TUZLA KÖPRÜ',
+      'KARTAL',
+      'MALTEPE',
+      'KÜÇÜKYALI',
+      'BOSTANCI',
+      'KOZYATAĞI',
+      'KAVACIK',
+      'FSM HAST.',
+      '4. LEVENT',
+    ];
+
+    const FINAL = STOPS[STOPS.length - 1];
+    const TICK_MS = 8000;
+    const FINAL_MS = 7000;
+    const START = { h: 8, m: 6 };
+
+    let segIdx = 0;
+    let extraMin = 0;
+
+    const screenEl = document.getElementById('screen');
+    const countNum = document.getElementById('countNum');
+    const countUnit = document.getElementById('countUnit');
+    const alertLabel = document.getElementById('alertLabel');
+    const destName = document.getElementById('destName');
+    const nowTag = document.getElementById('nowTag');
+    const nowName = document.getElementById('nowName');
+    const routeList = document.getElementById('routeList');
+    const progressBar = document.getElementById('progressBar');
+    const clockEl = document.getElementById('clock');
+    const finalName = document.getElementById('finalName');
+
+    function fit() {
+      const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+      screenEl.style.transform = `scale(${s})`;
+    }
+
+    function remaining() {
+      return STOPS.length - segIdx;
+    }
+
+    function phaseClass() {
+      const r = remaining();
+      if (r <= 0) return 'phase-final';
+      if (r <= 2) return 'phase-urgent';
+      if (r <= 4) return 'phase-warn';
+      return '';
+    }
+
+    function clock() {
+      const t = START.m + extraMin;
+      clockEl.textContent =
+        `${String(START.h + Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+    }
+
+    function buildProgress() {
+      progressBar.innerHTML = STOPS.map((_, i) => {
+        let cls = 'progress-step';
+        if (i < segIdx) cls += ' done';
+        else if (i === segIdx && segIdx < STOPS.length) {
+          cls += ' current';
+          const r = remaining();
+          if (r <= 2) cls += ' urgent';
+          else if (r <= 4) cls += ' warn';
+        } else if (i === STOPS.length - 1 && segIdx >= STOPS.length) {
+          cls += ' current final';
+        }
+        return `<span class="${cls}"></span>`;
+      }).join('');
+    }
+
+    function buildRoute() {
+      const windowStart = Math.max(0, segIdx - 1);
+      const windowEnd = Math.min(STOPS.length, windowStart + 5);
+      const slice = STOPS.slice(windowStart, windowEnd);
+
+      routeList.innerHTML = slice.map((name, i) => {
+        const absIdx = windowStart + i;
+        let cls = 'route-item';
+        if (absIdx < segIdx) cls += ' passed';
+        else if (absIdx === segIdx && segIdx < STOPS.length) cls += ' current';
+        else if (absIdx === STOPS.length - 1) cls += ' final-stop';
+        return `<li class="${cls}"><span class="dot"></span>${name}</li>`;
+      }).join('');
+    }
+
+    function render() {
+      const r = remaining();
+      const atFinal = segIdx >= STOPS.length;
+
+      screenEl.className = 'screen ' + phaseClass();
+      destName.textContent = FINAL;
+      finalName.textContent = FINAL;
+
+      if (atFinal) {
+        alertLabel.textContent = 'Varış noktası';
+        nowTag.textContent = 'Şu anki durak';
+        nowName.textContent = FINAL;
+      } else {
+        alertLabel.textContent = 'Son durağa kalan';
+        countNum.textContent = r;
+        countUnit.textContent = r === 1 ? 'durak' : 'durak';
+        countNum.classList.remove('pulse');
+        void countNum.offsetWidth;
+        countNum.classList.add('pulse');
+
+        if (segIdx === 0) {
+          nowTag.textContent = 'İlk durak';
+          nowName.textContent = STOPS[0];
+        } else {
+          nowTag.textContent = 'Sonraki durak';
+          nowName.textContent = STOPS[segIdx];
+        }
+      }
+
+      buildProgress();
+      buildRoute();
+    }
+
+    function scheduleNext() {
+      const delay = segIdx >= STOPS.length ? FINAL_MS : TICK_MS;
+      clearTimeout(scheduleNext._t);
+      scheduleNext._t = setTimeout(advance, delay);
+    }
+
+    function advance() {
+      segIdx += 1;
+      if (segIdx > STOPS.length) {
+        segIdx = 0;
+        extraMin = 0;
+      } else {
+        extraMin += 1;
+      }
+      clock();
+      render();
+      scheduleNext();
+    }
+
+    fit();
+    window.addEventListener('resize', fit);
+    clock();
+    render();
+    scheduleNext();
+  </script>
+</body>
+</html>

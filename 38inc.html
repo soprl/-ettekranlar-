@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=674">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>İETT 458 — Avcılar Metrobüs · Gürpınar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #2a2a2a;
+      font-family: 'Roboto', system-ui, sans-serif;
+    }
+
+    .viewport {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #2a2a2a;
+    }
+
+    .screen {
+      width: 1920px;
+      height: 674px;
+      flex-shrink: 0;
+      transform-origin: center center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #stage {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .map-layer,
+    .focus-layer {
+      position: absolute;
+      inset: 0;
+      transition: opacity 0.85s ease;
+    }
+
+    .map-layer { opacity: 1; }
+    .map-layer.hidden { opacity: 0; pointer-events: none; }
+
+    .map-layer {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #routeCanvas {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .ticker-bar {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      height: 58px;
+      display: flex;
+      align-items: stretch;
+      background: #ffc80a;
+      overflow: hidden;
+      z-index: 4;
+      border-top: 4px solid #e5b000;
+    }
+
+    .ticker-badge {
+      flex-shrink: 0;
+      width: 128px;
+      background: #1a1a1a;
+      color: #ffc80a;
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ticker-viewport {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .ticker-scroll {
+      display: inline-flex;
+      align-items: center;
+      height: 58px;
+      white-space: nowrap;
+      will-change: transform;
+      animation: ticker-flow 55s linear infinite;
+    }
+
+    .ticker-scroll span {
+      padding: 0 40px;
+      font-family: Roboto, sans-serif;
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .ticker-scroll span::before {
+      content: '◆';
+      margin-right: 28px;
+      color: #1a1a1a;
+      font-size: 16px;
+    }
+
+    @keyframes ticker-flow {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .focus-layer {
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fffbf0;
+    }
+
+    .focus-layer.visible { opacity: 1; }
+
+
+    .focus-wrap {
+      width: 100%;
+      padding: 0 64px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+    }
+
+    .focus-dot {
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #ffc80a;
+      border: 5px solid #fff;
+      box-shadow: 0 0 0 4px #e5b000;
+    }
+
+    .focus-dot.is-current {
+      width: 50px;
+      height: 50px;
+      background: #e5b000;
+      box-shadow: 0 0 0 5px #1a1a1a;
+    }
+
+    .focus-name {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-weight: 700;
+      color: #1a1a1a;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      line-height: 0.9;
+      flex: 0 1 auto;
+      max-width: calc(100% - 160px);
+      transform: scaleX(1.03);
+      transform-origin: center center;
+    }
+
+    .focus-name.size-md { letter-spacing: 0.05em; }
+    .focus-name.size-sm { letter-spacing: 0.04em; line-height: 0.94; }
+  </style>
+</head>
+<body>
+  <div class="viewport" id="viewport">
+    <div class="screen" id="screen">
+      <div id="stage">
+        <div class="map-layer" id="mapLayer">
+          <canvas id="routeCanvas" width="1920" height="674"></canvas>
+          <div class="ticker-bar" aria-label="Duyurular">
+            <div class="ticker-badge">DUYURU</div>
+            <div class="ticker-viewport">
+              <div class="ticker-scroll" id="tickerScroll"></div>
+            </div>
+          </div>
+        </div>
+        <div class="focus-layer" id="focusLayer" aria-hidden="true">
+          <div class="focus-wrap">
+            <span class="focus-dot is-current" aria-hidden="true"></span>
+            <p class="focus-name" id="focusName">—</p>
+            <span class="focus-dot is-current" aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SCREEN_W = 1920;
+    const W = 1920;
+    const H = 674;
+    const BORDER = 14;
+    const HEADER_H = 76;
+    const ROUTE_TITLE = 'Avcılar Metrobüs → Gürpınar';
+    const TICKER_H = 58;
+
+    const YELLOW = '#ffc80a';
+    const YELLOW_DARK = '#1a1a1a';
+    const YELLOW_MID = '#e5b000';
+    const YELLOW_DEEP = '#d4a000';
+    const YELLOW_LIGHT = '#fff8dc';
+    const YELLOW_PALE = '#ffe566';
+    const CREAM = '#fffbf0';
+    const LINE_BG = '#e8e4dc';
+    const DOT_FUTURE = '#d8d4cc';
+
+    /* 458 — Avcılar → Gürpınar (ilk 10 durak, İETT) */
+    const STOPS = [
+      'Cerrahpaşa',
+      'İGS',
+      'Cihangir',
+      'A. Lisesi',
+      'Türksan',
+      'Avcılar E5',
+      'Ambarlı',
+      'Saadetdere',
+      'Haramidere S.',
+      'Haramidere',
+    ];
+
+    const TRAVEL_MS = 3200;
+    const ARRIVE_MS = 1400;
+    const FOCUS_MS = 1000;
+    const FADE_MS = 900;
+
+    const canvas = document.getElementById('routeCanvas');
+    const ctx = canvas.getContext('2d');
+    const mapLayer = document.getElementById('mapLayer');
+    const focusLayer = document.getElementById('focusLayer');
+    const focusNameEl = document.getElementById('focusName');
+    const screenEl = document.getElementById('screen');
+
+    const play = {
+      x: BORDER,
+      y: BORDER,
+      w: W - BORDER * 2,
+      h: H - BORDER * 2,
+    };
+
+    const routePad = { left: 100, right: 120 };
+    const route = {
+      x0: play.x + routePad.left,
+      x1: play.x + play.w - routePad.right,
+    };
+
+    let busImg = null;
+    let currentIndex = 0;
+    let segmentT = 0;
+    let phase = 'focus';
+    let phaseUntil = 0;
+
+    function routeAreaBottom() {
+      return play.y + play.h - TICKER_H - 8;
+    }
+
+    function routeY() {
+      const top = play.y + HEADER_H + 8;
+      const bottom = routeAreaBottom();
+      return top + (bottom - top) * 0.5;
+    }
+
+    function stopX(i) {
+      const n = STOPS.length - 1;
+      return route.x0 + (route.x1 - route.x0) * (i / n);
+    }
+
+    function stopSpacing() {
+      return (route.x1 - route.x0) / (STOPS.length - 1);
+    }
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function upper(name) {
+      return name.toLocaleUpperCase('tr-TR');
+    }
+
+    function labelForStop(name, isCurrent) {
+      const maxPx = stopSpacing() * 0.88;
+      const full = upper(name);
+      const weight = isCurrent ? 700 : 600;
+      let size = isCurrent ? 36 : 28;
+      const minSize = isCurrent ? 18 : 15;
+
+      while (size >= minSize) {
+        ctx.font = `${weight} ${size}px "Roboto Condensed", sans-serif`;
+        if (ctx.measureText(full).width <= maxPx) {
+          return { text: full, size, weight, lines: null };
+        }
+        size -= 1;
+      }
+
+      const words = full.split(' ');
+      if (words.length >= 2) {
+        for (let trySize = minSize; trySize <= (isCurrent ? 36 : 28); trySize++) {
+          ctx.font = `${weight} ${trySize}px "Roboto Condensed", sans-serif`;
+          for (let split = 1; split < words.length; split++) {
+            const line1 = words.slice(0, split).join(' ');
+            const line2 = words.slice(split).join(' ');
+            if (
+              ctx.measureText(line1).width <= maxPx &&
+              ctx.measureText(line2).width <= maxPx
+            ) {
+              return { text: full, size: trySize, weight, lines: [line1, line2] };
+            }
+          }
+        }
+      }
+
+      ctx.font = `${weight} ${minSize}px "Roboto Condensed", sans-serif`;
+      return { text: full, size: minSize, weight, lines: null };
+    }
+
+    function fitFocusName(name) {
+      focusNameEl.textContent = upper(name);
+      focusNameEl.className = 'focus-name';
+      const len = name.length;
+      if (len > 28) {
+        focusNameEl.classList.add('size-sm');
+        focusNameEl.style.fontSize = '140px';
+      } else if (len > 18) {
+        focusNameEl.classList.add('size-md');
+        focusNameEl.style.fontSize = '185px';
+      } else {
+        focusNameEl.style.fontSize = '230px';
+      }
+    }
+
+    function drawBorder() {
+      ctx.fillStyle = YELLOW_DARK;
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = YELLOW_MID;
+      ctx.fillRect(BORDER / 2, BORDER / 2, W - BORDER, H - BORDER);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(play.x, play.y, play.w, play.h);
+      ctx.fillStyle = CREAM;
+      ctx.fillRect(
+        play.x,
+        play.y + HEADER_H,
+        play.w,
+        play.h - HEADER_H - TICKER_H - 8
+      );
+    }
+
+    function roundRect(x, y, w, h, r) {
+      const rad = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rad, y);
+      ctx.lineTo(x + w - rad, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+      ctx.lineTo(x + w, y + h - rad);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+      ctx.lineTo(x + rad, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+      ctx.lineTo(x, y + rad);
+      ctx.quadraticCurveTo(x, y, x + rad, y);
+      ctx.closePath();
+    }
+
+    function drawHatBadge(x, barTop, lineNo) {
+      const font = '900 44px "Roboto Condensed", sans-serif';
+      ctx.font = font;
+      const textW = ctx.measureText(lineNo).width;
+      const padX = 16;
+      const bw = textW + padX * 2;
+      const bh = 54;
+      const top = barTop + (HEADER_H - bh) / 2;
+
+      roundRect(x, top, bw, bh, 8);
+      ctx.fillStyle = YELLOW_DARK;
+      ctx.fill();
+      ctx.strokeStyle = YELLOW_MID;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = YELLOW;
+      ctx.font = font;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(lineNo, x + bw / 2, top + bh / 2);
+      ctx.textAlign = 'left';
+
+      return bw;
+    }
+
+    function measureRightHatBadge() {
+      const hatFont = '700 24px "Roboto Condensed", sans-serif';
+      const numFont = '900 50px "Roboto Condensed", sans-serif';
+      const padX = 14;
+      const gap = 10;
+      ctx.font = hatFont;
+      const hatW = ctx.measureText('HAT').width;
+      ctx.font = numFont;
+      const numW = ctx.measureText('458').width;
+      return padX * 2 + hatW + gap + numW;
+    }
+
+    function drawRightHatBadge(anchorRight, barTop) {
+      const hatFont = '700 24px "Roboto Condensed", sans-serif';
+      const numFont = '900 50px "Roboto Condensed", sans-serif';
+      const padX = 14;
+      const gap = 10;
+      const bh = 54;
+      const top = barTop + (HEADER_H - bh) / 2;
+      const midY = top + bh / 2;
+      ctx.font = hatFont;
+      const hatW = ctx.measureText('HAT').width;
+      const bw = measureRightHatBadge();
+      const left = anchorRight - bw;
+
+      roundRect(left, top, bw, bh, 8);
+      ctx.fillStyle = YELLOW_DARK;
+      ctx.fill();
+      ctx.strokeStyle = YELLOW_MID;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = YELLOW_PALE;
+      ctx.font = hatFont;
+      ctx.textAlign = 'left';
+      ctx.fillText('HAT', left + padX, midY);
+
+      ctx.fillStyle = YELLOW;
+      ctx.font = numFont;
+      ctx.fillText('458', left + padX + hatW + gap, midY);
+
+      return left;
+    }
+
+    function drawRouteTitle(x, maxW, barMid) {
+      let size = 38;
+      const minSize = 24;
+      const title = ROUTE_TITLE;
+
+      while (size >= minSize) {
+        ctx.font = `700 ${size}px "Roboto Condensed", sans-serif`;
+        if (ctx.measureText(title).width <= maxW) break;
+        size -= 2;
+      }
+
+      ctx.fillStyle = YELLOW_DARK;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(title, x, barMid);
+    }
+
+    function drawHeader() {
+      ctx.fillStyle = YELLOW;
+      ctx.fillRect(play.x, play.y, play.w, HEADER_H);
+
+      const barTop = play.y;
+      const barMid = play.y + HEADER_H / 2;
+      const pad = 24;
+      const rightAnchor = play.x + play.w - pad;
+      const rightBadgeLeft = rightAnchor - measureRightHatBadge();
+      const gapAfterBadge = 20;
+
+      drawRightHatBadge(rightAnchor, barTop);
+
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = YELLOW_DARK;
+      ctx.font = '700 40px "Roboto Condensed", sans-serif';
+      ctx.fillText('İETT', play.x + pad, barMid);
+
+      const iettW = ctx.measureText('İETT').width;
+      const badgeX = play.x + pad + iettW + 14;
+      const badgeW = drawHatBadge(badgeX, barTop, '458');
+
+      const routeX = badgeX + badgeW + gapAfterBadge;
+      const routeMaxW = rightBadgeLeft - routeX - 16;
+      drawRouteTitle(routeX, Math.max(120, routeMaxW), barMid);
+    }
+
+    function drawStopLabel(name, x, ry, isCurrent) {
+      const { text, size, weight, lines } = labelForStop(name, isCurrent);
+      ctx.save();
+      ctx.translate(x, ry - 88);
+      ctx.rotate(-0.52);
+      ctx.fillStyle = isCurrent ? YELLOW_DARK : '#5c5c5c';
+      ctx.font = `${weight} ${size}px "Roboto Condensed", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (lines) {
+        const lead = size * 0.95;
+        ctx.fillText(lines[0], 0, -lead);
+        ctx.fillText(lines[1], 0, lead);
+      } else {
+        ctx.fillText(text, 0, 0);
+      }
+      ctx.restore();
+    }
+
+    function drawRoute(upToIndex, busProgress) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(
+        play.x + 4,
+        play.y + HEADER_H + 4,
+        play.w - 8,
+        play.h - HEADER_H - TICKER_H - 16
+      );
+      ctx.clip();
+
+      const ry = routeY();
+      const endIdx = Math.min(upToIndex, STOPS.length - 1);
+      const busIdx = Math.min(upToIndex, STOPS.length - 2);
+      const t = Math.min(1, Math.max(0, busProgress));
+      const busX =
+        stopX(busIdx) + (stopX(busIdx + 1) - stopX(busIdx)) * easeOutCubic(t);
+
+      ctx.strokeStyle = LINE_BG;
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(route.x0, ry);
+      ctx.lineTo(route.x1, ry);
+      ctx.stroke();
+
+      const activeEndX =
+        t > 0 && upToIndex < STOPS.length - 1 ? busX : stopX(endIdx);
+      const grad = ctx.createLinearGradient(route.x0, ry, activeEndX, ry);
+      grad.addColorStop(0, YELLOW_PALE);
+      grad.addColorStop(1, YELLOW);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 12;
+      ctx.beginPath();
+      ctx.moveTo(route.x0, ry);
+      ctx.lineTo(activeEndX, ry);
+      ctx.stroke();
+
+      STOPS.forEach((name, i) => {
+        const x = stopX(i);
+        const passed = i <= endIdx;
+        const isCurrent = i === endIdx;
+        const r = isCurrent ? 18 : passed ? 14 : 10;
+
+        if (passed) drawStopLabel(name, x, ry, isCurrent);
+
+        ctx.beginPath();
+        ctx.arc(x, ry, r, 0, Math.PI * 2);
+        ctx.fillStyle = passed ? YELLOW_MID : DOT_FUTURE;
+        ctx.fill();
+        if (passed) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
+      });
+
+      const busTop = ry + 16;
+      if (busImg && busImg.complete) {
+        const sz = 52;
+        ctx.save();
+        ctx.filter = 'brightness(0) saturate(100%)';
+        ctx.drawImage(busImg, busX - sz / 2, busTop, sz, sz);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = YELLOW_DARK;
+        ctx.beginPath();
+        ctx.arc(busX, busTop + 24, 18, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawMap(upToIndex, busProgress) {
+      drawBorder();
+      drawHeader();
+      drawRoute(upToIndex, busProgress);
+    }
+
+    function showFocus(name) {
+      fitFocusName(name);
+      mapLayer.classList.add('hidden');
+      focusLayer.classList.add('visible');
+      focusLayer.setAttribute('aria-hidden', 'false');
+    }
+
+    function showMap() {
+      focusLayer.classList.remove('visible');
+      focusLayer.setAttribute('aria-hidden', 'true');
+      mapLayer.classList.remove('hidden');
+    }
+
+    function setPhase(next, until) {
+      phase = next;
+      phaseUntil = until;
+    }
+
+    function beginTravel(now) {
+      segmentT = 0;
+      setPhase('travel', now + TRAVEL_MS);
+    }
+
+    function runFrame(now) {
+      if (phase === 'travel') {
+        segmentT = Math.min(1, 1 - (phaseUntil - now) / TRAVEL_MS);
+        drawMap(currentIndex, segmentT);
+        if (now >= phaseUntil) {
+          currentIndex += 1;
+          segmentT = 0;
+          setPhase('arrive', now + ARRIVE_MS);
+        }
+      } else if (phase === 'arrive') {
+        drawMap(currentIndex, 0);
+        if (now >= phaseUntil) {
+          setPhase('focus', now + FOCUS_MS);
+          showFocus(STOPS[currentIndex]);
+        }
+      } else if (phase === 'focus') {
+        if (now >= phaseUntil) {
+          showMap();
+          if (currentIndex >= STOPS.length - 1) {
+            currentIndex = 0;
+            setPhase('focus', now + FOCUS_MS);
+            showFocus(STOPS[0]);
+          } else {
+            beginTravel(now + FADE_MS);
+          }
+        }
+      }
+      requestAnimationFrame(runFrame);
+    }
+
+    function startLoop() {
+      currentIndex = 0;
+      showFocus(STOPS[0]);
+      setPhase('focus', performance.now() + FOCUS_MS);
+      requestAnimationFrame(runFrame);
+    }
+
+    function fitViewport() {
+      const scale = Math.min(
+        window.innerWidth / SCREEN_W,
+        window.innerHeight / H,
+        1
+      );
+      screenEl.style.transform = `scale(${scale})`;
+    }
+
+    const TICKER_NEWS = [
+      'İETT 458 hattı Avcılar Metrobüs — Gürpınar yönünde hizmet vermektedir.',
+      'Güncel sefer saatleri ve hat bilgileri için iett.istanbul',
+      'İstanbulkart ile hızlı ve kolay ödeme yapabilirsiniz.',
+      'Yoğun saatlerde alternatif hatları değerlendiriniz.',
+      'ERPA Teknoloji akıllı durak ekranından bilgilendiriliyorsunuz.',
+      'Engelli vatandaşlarımız için öncelikli biniş uygulanmaktadır.',
+    ];
+
+    function initTicker() {
+      const line = TICKER_NEWS.join(' ');
+      const scroll = document.getElementById('tickerScroll');
+      const chunk = `<span>${line}</span>`;
+      scroll.innerHTML = chunk + chunk;
+    }
+
+    busImg = new Image();
+    busImg.src = 'front-of-bus.png';
+
+    initTicker();
+    drawMap(0, 0);
+    fitViewport();
+    window.addEventListener('resize', fitViewport);
+    startLoop();
+  </script>
+</body>
+</html>

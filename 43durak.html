@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Akıllı Durak Ekranları · 43durak</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700;900&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #0a1628;
+      --white: #ffffff;
+      --bg: #e8eef5;
+      --surface: #ffffff;
+      --border: #c5d4e8;
+      --border-strong: #93b4e8;
+      --muted: #5c6570;
+      --muted-light: #7a8799;
+      --blue: #1a4f9c;
+      --blue-soft: #e8f0fe;
+      --blue-mid: #2563eb;
+      --blue-dark: #0b2347;
+      --accent: #1a73e8;
+      --green: #059669;
+      --green-soft: #d1fae5;
+      --row-h: 144px;
+      --header-h: 172px;
+      --stop-h: 156px;
+      --ticker-h: 84px;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Roboto', system-ui, sans-serif;
+      background: #0a1628;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .viewport {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0a1628;
+    }
+
+    .screen {
+      width: 1080px;
+      height: 1920px;
+      flex-shrink: 0;
+      transform-origin: center center;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .weather-box {
+      flex-shrink: 0;
+      width: 560px;
+      height: 140px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 28px rgba(56, 120, 180, 0.45);
+      border: 2px solid rgba(255, 255, 255, 0.35);
+    }
+
+    body.record-mode .viewport {
+      width: 1080px;
+      height: 1920px;
+      display: block;
+      background: var(--bg);
+    }
+
+    body.record-mode .screen {
+      transform: none !important;
+    }
+
+    #weatherCanvas {
+      display: block;
+      width: 560px;
+      height: 140px;
+    }
+
+    .top {
+      height: var(--header-h);
+      background: var(--white);
+      padding: 16px 24px 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-shrink: 0;
+      border-bottom: 5px solid var(--blue);
+    }
+
+    .top-brand {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      min-width: 0;
+    }
+
+    .top-icon {
+      width: 88px;
+      height: 88px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .top-icon img {
+      width: 76px;
+      height: 76px;
+      filter: brightness(0) saturate(100%) invert(28%) sepia(90%) saturate(1200%) hue-rotate(185deg);
+    }
+
+    .brand-title {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--blue-dark);
+      letter-spacing: 0.04em;
+      line-height: 1.08;
+    }
+
+    .stop-banner {
+      height: var(--stop-h);
+      background: var(--blue-soft);
+      padding: 20px 32px;
+      border-bottom: 3px solid var(--border-strong);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .stop-banner .stop-label {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 8px;
+    }
+
+    .stop-banner h1 {
+      font-size: 4rem;
+      font-weight: 900;
+      color: var(--ink);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      line-height: 1.05;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 24px;
+      background: var(--white);
+      border: 3px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .live-badge .dot {
+      width: 16px;
+      height: 16px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    .live-badge span:last-child {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .lines-panel {
+      flex: 1;
+      min-height: 0;
+      margin: 20px 24px 0;
+      background: var(--surface);
+      border: 4px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .lines-panel-head {
+      padding: 22px 28px 16px;
+      border-bottom: 3px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .lines-panel-head h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--ink);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .lines-table-head {
+      display: grid;
+      grid-template-columns: 140px 1fr 172px;
+      gap: 16px;
+      padding: 14px 28px;
+      background: var(--bg);
+      border-bottom: 3px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .lines-table-head span {
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .lines-table-head span:last-child {
+      text-align: right;
+    }
+
+    .lines-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hat-row {
+      border-bottom: 2px solid var(--border);
+      flex-shrink: 0;
+      background: var(--white);
+      transition: background-color 0.35s ease, box-shadow 0.35s ease;
+      contain: layout style paint;
+    }
+
+    .hat-row:last-child { border-bottom: none; }
+
+    .hat-row-main {
+      display: grid;
+      grid-template-columns: 140px 1fr 172px;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 28px;
+      min-height: var(--row-h);
+    }
+
+    .line-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 72px;
+      background: var(--blue);
+      padding: 8px 12px;
+    }
+
+    .hat-row .line-no {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 2.35rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 0.02em;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .dest-wrap { min-width: 0; }
+
+    .dest-wrap .dest {
+      display: block;
+      font-size: 2.15rem;
+      font-weight: 700;
+      color: var(--ink);
+      text-transform: uppercase;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .eta-box { text-align: right; }
+
+    .eta-box .eta-num {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 3.85rem;
+      font-weight: 700;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      display: inline-block;
+    }
+
+    .eta-box .eta-num .unit {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-left: 2px;
+    }
+
+    .hat-row.active {
+      background: var(--blue-soft);
+      box-shadow: inset 8px 0 0 var(--blue);
+    }
+
+    .hat-row.active .line-badge { background: var(--blue-dark); }
+    .hat-row.active .eta-num { color: var(--blue-dark); }
+
+    .hat-row.arrived {
+      background: var(--green-soft);
+      box-shadow: inset 8px 0 0 var(--green);
+    }
+
+    .hat-row.arrived .line-badge { background: var(--green); }
+    .hat-row.arrived .eta-num {
+      font-size: 2.85rem;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 0.04em;
+    }
+
+    .hat-row.gone { opacity: 0.45; }
+    .hat-row.gone .eta-num { font-size: 2.45rem; color: var(--muted); }
+
+    .hat-extra {
+      display: grid;
+      grid-template-rows: 0fr;
+      padding: 0 20px;
+      transition:
+        grid-template-rows 0.65s cubic-bezier(0.33, 1, 0.2, 1),
+        padding 0.65s cubic-bezier(0.33, 1, 0.2, 1);
+    }
+
+    .hat-row.active .hat-extra,
+    .hat-row.panel-open .hat-extra {
+      grid-template-rows: 1fr;
+      padding: 0 28px 24px;
+    }
+
+    .hat-extra-inner {
+      overflow: hidden;
+      min-height: 0;
+      opacity: 0;
+      transform: translateY(-16px) scale(0.98);
+      transform-origin: top center;
+      transition:
+        opacity 0.5s ease 0.12s,
+        transform 0.55s cubic-bezier(0.33, 1, 0.2, 1) 0.1s;
+    }
+
+    .hat-row.active .hat-extra-inner,
+    .hat-row.panel-open .hat-extra-inner {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .hat-row.panel-closing .hat-extra {
+      grid-template-rows: 0fr;
+      padding: 0 20px;
+    }
+
+    .hat-row.panel-closing .hat-extra-inner {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.98);
+      transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    .track-card {
+      background: var(--white);
+      border: 3px solid var(--border);
+      padding: 22px 24px 24px;
+    }
+
+    .track-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .track-card-head .section-label {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .approach-tag {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--blue-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 8px 16px;
+      background: var(--blue-soft);
+      border: 2px solid var(--border-strong);
+      display: none;
+    }
+
+    .hat-row.active .approach-tag { display: inline-block; }
+
+    .track-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .track-labels span {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--muted-light);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .mini-track {
+      position: relative;
+      height: 64px;
+    }
+
+    .mini-rail {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 14px;
+      margin-top: -7px;
+      background: #c5d4e8;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+
+    .mini-line-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--blue));
+      border-radius: 7px;
+      will-change: width;
+    }
+
+    .ticker-bar {
+      flex-shrink: 0;
+      height: var(--ticker-h);
+      display: flex;
+      align-items: stretch;
+      background: var(--blue);
+      overflow: hidden;
+      border-top: 4px solid var(--accent);
+      margin-top: 14px;
+    }
+
+    .ticker-badge {
+      width: 140px;
+      flex-shrink: 0;
+      background: var(--blue-dark);
+      color: #93c5fd;
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ticker-viewport { flex: 1; overflow: hidden; }
+
+    .ticker-scroll {
+      display: inline-flex;
+      align-items: center;
+      height: var(--ticker-h);
+      white-space: nowrap;
+      animation: ticker-flow 45s linear infinite;
+    }
+
+    .ticker-scroll span {
+      padding: 0 48px;
+      font-size: 26px;
+      font-weight: 600;
+      color: #eff6ff;
+    }
+
+    .ticker-scroll span::before {
+      content: '◆';
+      margin-right: 28px;
+      color: #93c5fd;
+      font-size: 16px;
+    }
+
+    @keyframes ticker-flow {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+  </style>
+</head>
+<body>
+  <div class="viewport" id="viewport">
+    <article class="screen" id="screen" aria-label="Gelen otobüsler">
+      <header class="top">
+        <div class="top-brand">
+          <div class="top-icon" aria-hidden="true">
+            <img src="front-of-bus.png" alt="">
+          </div>
+          <h1 class="brand-title">AKILLI DURAK EKRANLARI</h1>
+        </div>
+        <div class="weather-box" aria-label="Hava durumu">
+          <canvas id="weatherCanvas" width="560" height="140"></canvas>
+        </div>
+      </header>
+
+      <div class="stop-banner">
+        <div>
+          <p class="stop-label">Durak</p>
+          <h1>Mecidiyeköy</h1>
+        </div>
+        <div class="live-badge" aria-hidden="true">
+          <span class="dot"></span>
+          <span>Canlı</span>
+        </div>
+      </div>
+
+      <section class="lines-panel" aria-labelledby="linesTitle">
+        <div class="lines-panel-head">
+          <h2 id="linesTitle">Gelen Hatlar</h2>
+        </div>
+        <div class="lines-table-head" aria-hidden="true">
+          <span>Hat</span>
+          <span></span>
+          <span>Tahmin</span>
+        </div>
+        <div class="lines-scroll" id="linesList"></div>
+      </section>
+
+      <footer class="ticker-bar" aria-label="Duyurular">
+        <div class="ticker-badge">DUYURU</div>
+        <div class="ticker-viewport">
+          <div class="ticker-scroll" id="tickerScroll"></div>
+        </div>
+      </footer>
+    </article>
+  </div>
+
+  <script>
+    const SCREEN_W = 1080;
+    const SCREEN_H = 1920;
+    const IS_RECORD = new URLSearchParams(location.search).has('record');
+
+    const ARRIVED_MS = 3200;
+    const RESET_MIN = 24;
+    const DRIFT_CHECK_MS = 1200;
+    const PANEL_OPEN_MS = 720;
+    const PANEL_CLOSE_MS = 520;
+    const REORDER_MS = 580;
+    const LINE_DEFS = [
+      { line: '34E', dest: 'Kadıköy' },
+      { line: '40', dest: 'Taksim' },
+      { line: '54H', dest: 'Sarıyer' },
+      { line: '25E', dest: 'Rumeli Hisarı' },
+      { line: '129T', dest: 'Beyazıt' },
+      { line: '29C', dest: 'Cevizlibağ' },
+      { line: '122H', dest: 'Yenikapı' },
+      { line: '48H', dest: 'İstinye' },
+    ];
+
+    const START_MINUTES = [6, 8, 9, 11, 12, 14, 16, 18];
+
+    const linesListEl = document.getElementById('linesList');
+    const screenEl = document.getElementById('screen');
+    const wctx = document.getElementById('weatherCanvas').getContext('2d');
+
+    let buses = [];
+    let animating = false;
+    let rowById = new Map();
+    let lastOrderKey = '';
+
+    const WEATHER_CYCLE = [
+      { temp: 15, label: 'Sağnak yağışlı', code: 80 },
+      { temp: 22, label: 'Parçalı bulutlu', code: 2 },
+      { temp: 22, label: 'Güneşli', code: 0 },
+    ];
+    const WEATHER_PHASE_MS = 5000;
+    const WEATHER_BLEND_MS = 2000;
+    const WEATHER_SKY = {
+      rainy: [
+        [168, 184, 200],
+        [143, 163, 181],
+        [117, 138, 156],
+      ],
+      cloudy: [
+        [135, 206, 235],
+        [110, 184, 232],
+        [77, 163, 217],
+      ],
+      clear: [
+        [126, 200, 240],
+        [94, 179, 232],
+        [61, 154, 212],
+      ],
+    };
+    let weatherTimelineStart = 0;
+    let weather = { isDay: true };
+    const clouds = Array.from({ length: 6 }, (_, i) => ({
+      x: i * 95,
+      y: 28 + (i % 3) * 18,
+      w: 48 + (i % 2) * 20,
+      speed: 0.08 + i * 0.025,
+    }));
+
+    function sleep(ms) {
+      return new Promise((r) => setTimeout(r, ms));
+    }
+
+    async function fetchWeather() {
+      try {
+        const res = await fetch(
+          'https://api.open-meteo.com/v1/forecast?latitude=41.01&longitude=28.98&current=temperature_2m,weather_code,is_day&timezone=Europe%2FIstanbul'
+        );
+        const data = await res.json();
+        const c = data.current;
+        weather.isDay = c.is_day === 1;
+      } catch (_) {}
+    }
+
+    function weatherSmoothstep(t) {
+      const x = Math.max(0, Math.min(1, t));
+      return x * x * (3 - 2 * x);
+    }
+
+    function weatherLerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function weatherPhaseVisual(phase) {
+      if (!phase) return { rainy: 0, cloudy: 1, clear: 0 };
+      if (phase.code <= 1) return { rainy: 0, cloudy: 0, clear: 1 };
+      if (phase.code >= 61 && phase.code <= 67) return { rainy: 1, cloudy: 0, clear: 0 };
+      if (phase.code >= 80 && phase.code <= 82) return { rainy: 1, cloudy: 0, clear: 0 };
+      return { rainy: 0, cloudy: 1, clear: 0 };
+    }
+
+    function sampleWeatherBlend(now) {
+      const n = WEATHER_CYCLE.length;
+      const clock = typeof now === 'number' && Number.isFinite(now) ? now : performance.now();
+      const elapsed = Math.max(0, clock - weatherTimelineStart);
+      const phaseIdx = ((Math.floor(elapsed / WEATHER_PHASE_MS) % n) + n) % n;
+      const tInPhase = elapsed % WEATHER_PHASE_MS;
+      const from = WEATHER_CYCLE[phaseIdx];
+      const to = WEATHER_CYCLE[(phaseIdx + 1) % n];
+      const blendStart = WEATHER_PHASE_MS - WEATHER_BLEND_MS;
+      const mix =
+        tInPhase >= blendStart
+          ? weatherSmoothstep((tInPhase - blendStart) / WEATHER_BLEND_MS)
+          : 0;
+      const vFrom = weatherPhaseVisual(from);
+      const vTo = weatherPhaseVisual(to);
+      return {
+        from,
+        to,
+        mix,
+        rainy: weatherLerp(vFrom.rainy, vTo.rainy, mix),
+        cloudy: weatherLerp(vFrom.cloudy, vTo.cloudy, mix),
+        clear: weatherLerp(vFrom.clear, vTo.clear, mix),
+      };
+    }
+
+    function weatherSkyRgb(rainy, cloudy, clear, stopIdx) {
+      const keys = ['rainy', 'cloudy', 'clear'];
+      const weights = [rainy, cloudy, clear];
+      let r = 0;
+      let g = 0;
+      let b = 0;
+      keys.forEach((key, i) => {
+        const w = weights[i];
+        const c = WEATHER_SKY[key][stopIdx];
+        r += c[0] * w;
+        g += c[1] * w;
+        b += c[2] * w;
+      });
+      return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+    }
+
+    function drawWeatherScene(t, now) {
+      const w = 560;
+      const h = 140;
+      const blend = sampleWeatherBlend(now);
+      const { from, to, mix, rainy, cloudy, clear } = blend;
+
+      const sky = wctx.createLinearGradient(0, 0, 0, h);
+      if (!weather.isDay) {
+        sky.addColorStop(0, '#4a5d6e');
+        sky.addColorStop(0.55, '#5c6f7f');
+        sky.addColorStop(1, '#6d8090');
+      } else {
+        sky.addColorStop(0, weatherSkyRgb(rainy, cloudy, clear, 0));
+        sky.addColorStop(0.45, weatherSkyRgb(rainy, cloudy, clear, 1));
+        sky.addColorStop(1, weatherSkyRgb(rainy, cloudy, clear, 2));
+      }
+      wctx.fillStyle = sky;
+      wctx.fillRect(0, 0, w, h);
+
+      const horizon = wctx.createLinearGradient(0, h * 0.7, 0, h);
+      horizon.addColorStop(0, 'rgba(255,255,255,0)');
+      horizon.addColorStop(1, 'rgba(255,255,255,0.12)');
+      wctx.fillStyle = horizon;
+      wctx.fillRect(0, h * 0.65, w, h * 0.35);
+
+      clouds.forEach((c) => {
+        const x = ((c.x + t * c.speed * 35) % (w + c.w)) - c.w;
+        wctx.fillStyle = 'rgba(220,228,236,0.92)';
+        wctx.beginPath();
+        wctx.ellipse(x + c.w * 0.3, c.y, c.w * 0.32, 16, 0, 0, Math.PI * 2);
+        wctx.ellipse(x + c.w * 0.55, c.y + 8, c.w * 0.38, 18, 0, 0, Math.PI * 2);
+        wctx.ellipse(x + c.w * 0.15, c.y + 10, c.w * 0.26, 14, 0, 0, Math.PI * 2);
+        wctx.fill();
+      });
+      if (rainy > 0.02) {
+        wctx.fillStyle = `rgba(180,195,210,${0.5 * rainy})`;
+        wctx.fillRect(0, 0, w, h * 0.55);
+      }
+      if (cloudy > 0.02) {
+        wctx.fillStyle = `rgba(255,255,255,${0.08 * cloudy})`;
+        wctx.fillRect(0, 0, w, h * 0.45);
+      }
+
+      if (weather.isDay && clear > 0.02) {
+        const pulse = 0.94 + Math.sin(t * 1.8) * 0.04;
+        const sx = w - 72;
+        const sy = 48;
+        wctx.save();
+        wctx.globalAlpha = clear;
+        wctx.translate(sx, sy);
+        wctx.scale(pulse, pulse);
+        const glow = wctx.createRadialGradient(0, 0, 6, 0, 0, 36);
+        glow.addColorStop(0, 'rgba(255,249,196,0.95)');
+        glow.addColorStop(0.5, 'rgba(253,224,71,0.5)');
+        glow.addColorStop(1, 'rgba(253,224,71,0)');
+        wctx.fillStyle = glow;
+        wctx.beginPath();
+        wctx.arc(0, 0, 36, 0, Math.PI * 2);
+        wctx.fill();
+        wctx.fillStyle = '#fde047';
+        wctx.beginPath();
+        wctx.arc(0, 0, 18, 0, Math.PI * 2);
+        wctx.fill();
+        wctx.restore();
+      }
+
+      if (rainy > 0.02) {
+        wctx.save();
+        wctx.globalAlpha = rainy;
+        for (let layer = 0; layer < 2; layer++) {
+          wctx.strokeStyle =
+            layer === 0 ? 'rgba(255,255,255,0.45)' : 'rgba(200,220,240,0.65)';
+          wctx.lineWidth = layer === 0 ? 1.2 : 1.8;
+          const count = layer === 0 ? 55 : 40;
+          for (let i = 0; i < count; i++) {
+            const rx = (i * 41 + layer * 17 + t * (90 + layer * 30)) % w;
+            const ry = (i * 29 + layer * 11 + t * (140 + layer * 40)) % (h + 20);
+            const len = 6 + (i % 5) * 2;
+            wctx.beginPath();
+            wctx.moveTo(rx, ry);
+            wctx.lineTo(rx - 4, ry + len);
+            wctx.stroke();
+          }
+        }
+        wctx.restore();
+      }
+
+      wctx.fillStyle = '#fff';
+      wctx.font = '700 64px Roboto Condensed, sans-serif';
+      wctx.textAlign = 'left';
+      wctx.textBaseline = 'alphabetic';
+      const tempFrom = Math.round(from.temp);
+      const tempTo = Math.round(to.temp);
+      wctx.save();
+      wctx.globalAlpha = 1 - mix;
+      wctx.fillText(`${tempFrom}°`, 20, 82);
+      wctx.font = '600 22px Roboto, sans-serif';
+      wctx.fillText(from.label, 20, 114);
+      wctx.globalAlpha = mix;
+      wctx.font = '700 64px Roboto Condensed, sans-serif';
+      wctx.fillText(`${tempTo}°`, 20, 82);
+      wctx.font = '600 22px Roboto, sans-serif';
+      wctx.fillText(to.label, 20, 114);
+      wctx.restore();
+      wctx.font = '700 17px Roboto Condensed, sans-serif';
+      wctx.fillStyle = 'rgba(255,255,255,0.9)';
+      wctx.fillText('İSTANBUL', 20, 32);
+    }
+
+    let weatherT0 = performance.now();
+    function weatherLoop() {
+      const now = performance.now();
+      drawWeatherScene((now - weatherT0) / 1000, now);
+      requestAnimationFrame(weatherLoop);
+    }
+
+    function initTicker() {
+      const messages = [
+        'Şu an akıllı durak ekranımıza bakmaktasınız — gelen hatlar ve tahmini varış süreleri canlı olarak gösterilmektedir.',
+        'Bu ekran, durağınıza yaklaşan otobüsleri ve dakika bilgisini anlık olarak sunar.',
+        'Akıllı durak ekranları: güvenli ve konforlu yolculuk için doğru bilgi, doğru zamanda.',
+        'İETT hatları için tahmini varış süreleri bilgilendirme amaçlıdır — resmi sefer saatleri için iett.istanbul',
+      ];
+      const text = messages.join(' ');
+      const scroll = document.getElementById('tickerScroll');
+      const chunk = `<span>${text}</span>`;
+      scroll.innerHTML = chunk + chunk;
+    }
+
+    function slowDriftMs(minutes) {
+      return 5500 + minutes * 950;
+    }
+
+    function fastTickMs(minutes) {
+      return Math.max(650, 380 + minutes * 85);
+    }
+
+    function initBuses() {
+      const now = Date.now();
+      buses = LINE_DEFS.map((def, i) => ({
+        id: i,
+        line: def.line,
+        dest: def.dest,
+        minutes: START_MINUTES[i],
+        phase: 'idle',
+        progress: 0,
+        countdownFrom: 0,
+        nextDriftAt: now + slowDriftMs(START_MINUTES[i]) + i * 700,
+      }));
+    }
+
+    function scheduleDrift(bus) {
+      bus.nextDriftAt = Date.now() + slowDriftMs(bus.minutes);
+    }
+
+    function tickBackgroundDrift() {
+      const now = Date.now();
+      let changed = false;
+      buses.forEach((b) => {
+        if (b.phase !== 'idle' || b.minutes <= 1) return;
+        if (now < b.nextDriftAt) return;
+        b.minutes -= 1;
+        scheduleDrift(b);
+        changed = true;
+      });
+      if (changed && !animating) render();
+    }
+
+    function sortRank(b) {
+      if (b.phase === 'active') return -1000;
+      if (b.phase === 'arrived') return -500;
+      if (b.phase === 'gone') return 8000;
+      return b.minutes;
+    }
+
+    function sortBuses() {
+      buses.sort((a, b) => sortRank(a) - sortRank(b));
+    }
+
+    function progressFromMinute(from, current) {
+      if (current <= 0) return 96;
+      const done = (from - current) / from;
+      return 14 + done * 82;
+    }
+
+    function etaHtml(b) {
+      if (b.phase === 'arrived') return 'GELDİ';
+      if (b.phase === 'gone') return '—';
+      return `${b.minutes}<span class="unit">dk</span>`;
+    }
+
+    function createRowEl(b) {
+      const el = document.createElement('article');
+      el.className = 'hat-row';
+      el.dataset.id = String(b.id);
+      el.innerHTML = `
+        <div class="hat-row-main">
+          <div class="line-badge"><span class="line-no">${b.line}</span></div>
+          <div class="dest-wrap"><span class="dest">${b.dest}</span></div>
+          <div class="eta-box"><div class="eta-num">${etaHtml(b)}</div></div>
+        </div>
+        <div class="hat-extra">
+          <div class="hat-extra-inner">
+            <div class="track-card">
+              <div class="track-card-head">
+                <p class="section-label">Otobüs konumu</p>
+                <span class="approach-tag">Yaklaşıyor</span>
+              </div>
+              <div class="mini-route">
+                <div class="track-labels" aria-hidden="true">
+                  <span>Durak</span>
+                  <span>Hat</span>
+                </div>
+                <div class="mini-track">
+                  <div class="mini-rail"><div class="mini-line-fill"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      return el;
+    }
+
+    function setRowPhase(el, phase) {
+      el.classList.remove('active', 'arrived', 'gone');
+      if (phase && phase !== 'idle') el.classList.add(phase);
+    }
+
+    async function openBusPanel(row) {
+      row.classList.add('panel-open');
+      await sleep(PANEL_OPEN_MS);
+    }
+
+    async function closeBusPanel(row) {
+      row.classList.add('panel-closing');
+      row.classList.remove('panel-open');
+      await sleep(PANEL_CLOSE_MS);
+      row.classList.remove('panel-closing');
+    }
+
+    function playReorderFlip() {
+      const items = [...linesListEl.children];
+      const firstRects = new Map(
+        items.map((el) => [el.dataset.id, el.getBoundingClientRect()])
+      );
+      reorderDom();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          items.forEach((el) => {
+            const first = firstRects.get(el.dataset.id);
+            if (!first) return;
+            const last = el.getBoundingClientRect();
+            const deltaY = first.top - last.top;
+            if (Math.abs(deltaY) < 2) return;
+            el.style.transition = 'transform 0s';
+            el.style.transform = `translateY(${deltaY}px)`;
+          });
+          requestAnimationFrame(() => {
+            items.forEach((el) => {
+              el.style.transition = `transform ${REORDER_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+              el.style.transform = '';
+            });
+            setTimeout(() => {
+              items.forEach((el) => {
+                el.style.transition = '';
+                el.style.transform = '';
+              });
+            }, REORDER_MS + 40);
+          });
+        });
+      });
+    }
+
+    function setLineProgress(fill, progress, durationMs, instant) {
+      const dur = durationMs || 1400;
+      const p = Math.min(100, Math.max(0, progress));
+      if (instant) {
+        fill.style.transition = 'none';
+      } else {
+        fill.style.transition = `width ${dur}ms linear`;
+      }
+      fill.style.width = `${p}%`;
+      if (instant) {
+        void fill.offsetWidth;
+        fill.style.transition = '';
+      }
+    }
+
+    function updateEta(el, b) {
+      const eta = el.querySelector('.eta-num');
+      const html = etaHtml(b);
+      if (eta.innerHTML !== html) eta.innerHTML = html;
+    }
+
+    function updateRowEl(el, b, { moveMs = 1400 } = {}) {
+      if (!el) return;
+      setRowPhase(el, b.phase);
+      updateEta(el, b);
+      const fill = el.querySelector('.mini-line-fill');
+      if (!fill) return;
+      if (b.phase === 'active' || b.phase === 'arrived') {
+        setLineProgress(fill, b.progress, moveMs, false);
+      } else {
+        setLineProgress(fill, 0, 0, true);
+      }
+    }
+
+    function orderKey() {
+      return buses.map((b) => `${b.id}:${b.phase}:${b.minutes}`).join('|');
+    }
+
+    function reorderDom() {
+      buses.forEach((b) => {
+        const el = rowById.get(b.id);
+        if (el) linesListEl.appendChild(el);
+      });
+    }
+
+    function mountRows() {
+      buses.forEach((b) => {
+        const el = createRowEl(b);
+        rowById.set(b.id, el);
+        linesListEl.appendChild(el);
+      });
+    }
+
+    function render(options = {}) {
+      if (animating && !options.force) return;
+      sortBuses();
+      const key = orderKey();
+      const orderChanged = key !== lastOrderKey;
+      buses.forEach((b) => {
+        updateRowEl(rowById.get(b.id), b, { moveMs: options.moveMs });
+      });
+      if (orderChanged) {
+        lastOrderKey = key;
+        if (options.animateReorder) playReorderFlip();
+        else reorderDom();
+      }
+    }
+
+    function pickNextBus() {
+      const idle = buses.filter((b) => b.phase === 'idle');
+      if (!idle.length) return null;
+      return idle.reduce((a, b) => (b.minutes < a.minutes ? b : a));
+    }
+
+    async function animateBus(bus) {
+      animating = true;
+      bus.phase = 'active';
+      bus.countdownFrom = bus.minutes;
+      bus.progress = 0;
+      sortBuses();
+      lastOrderKey = orderKey();
+      reorderDom();
+
+      const row = rowById.get(bus.id);
+      setRowPhase(row, 'active');
+      updateEta(row, bus);
+      await openBusPanel(row);
+
+      const fill = row.querySelector('.mini-line-fill');
+
+      setLineProgress(fill, 0, 0, true);
+      await sleep(80);
+      setLineProgress(fill, 12, 450, false);
+      await sleep(480);
+
+      while (bus.minutes >= 1) {
+        const wait = fastTickMs(bus.minutes);
+        bus.progress = progressFromMinute(bus.countdownFrom, bus.minutes);
+        setLineProgress(fill, bus.progress, wait, false);
+        updateEta(row, bus);
+        await sleep(wait);
+        if (bus.minutes > 1) bus.minutes -= 1;
+        else break;
+      }
+
+      bus.phase = 'arrived';
+      bus.progress = 98;
+      setRowPhase(row, 'arrived');
+      setLineProgress(fill, 98, 600, false);
+      updateEta(row, bus);
+      await closeBusPanel(row);
+      await sleep(Math.max(0, ARRIVED_MS - PANEL_CLOSE_MS));
+
+      bus.phase = 'gone';
+      bus.progress = 0;
+      setRowPhase(row, 'gone');
+      updateEta(row, bus);
+      setLineProgress(fill, 0, 0, true);
+      await sleep(400);
+
+      bus.phase = 'idle';
+      bus.minutes = RESET_MIN + Math.floor(Math.random() * 8);
+      bus.progress = 0;
+      scheduleDrift(bus);
+
+      animating = false;
+      lastOrderKey = '';
+      sortBuses();
+      buses.forEach((b) => updateRowEl(rowById.get(b.id), b));
+      playReorderFlip();
+      await sleep(REORDER_MS + 80);
+    }
+
+    async function runLoop() {
+      while (true) {
+        const next = pickNextBus();
+        if (!next) {
+          await sleep(300);
+          continue;
+        }
+        await animateBus(next);
+        await sleep(600);
+      }
+    }
+
+    function fitViewport() {
+      if (IS_RECORD) {
+        document.body.classList.add('record-mode');
+        screenEl.style.transform = 'none';
+        return;
+      }
+      document.body.classList.remove('record-mode');
+      const scale = Math.min(
+        window.innerWidth / SCREEN_W,
+        window.innerHeight / SCREEN_H,
+        1
+      );
+      screenEl.style.transform = scale < 1 ? `scale(${scale})` : 'none';
+    }
+
+    initBuses();
+    mountRows();
+    render();
+    initTicker();
+    fetchWeather();
+    setInterval(fetchWeather, 10 * 60 * 1000);
+    weatherTimelineStart = performance.now();
+    requestAnimationFrame(weatherLoop);
+    setInterval(tickBackgroundDrift, DRIFT_CHECK_MS);
+    fitViewport();
+    window.addEventListener('resize', fitViewport);
+    runLoop();
+  </script>
+</body>
+</html>

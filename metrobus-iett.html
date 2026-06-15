@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=214">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>İETT Metrobüs — Avcılar · Zincirlikuyu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #1a1a1a;
+      font-family: 'Roboto', system-ui, sans-serif;
+    }
+
+    .viewport {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a1a;
+    }
+
+    .screen {
+      width: 1920px;
+      height: 214px;
+      flex-shrink: 0;
+      transform-origin: center center;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+    }
+
+    .route-panel {
+      width: 1144px;
+      height: 214px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    #stage {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .map-layer,
+    .focus-layer {
+      position: absolute;
+      inset: 0;
+      transition: opacity 0.55s ease;
+    }
+
+    .map-layer { opacity: 1; }
+    .map-layer.hidden { opacity: 0; pointer-events: none; }
+
+    .focus-layer {
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fffef5;
+    }
+
+    .focus-layer.visible { opacity: 1; }
+
+    #routeCanvas {
+      display: block;
+      width: 1144px;
+      height: 214px;
+    }
+
+    .focus-wrap {
+      width: 100%;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .focus-name {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 118px;
+      font-weight: 700;
+      color: #1a1d21;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      line-height: 0.9;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      transform: scaleX(1.05);
+      transform-origin: center center;
+    }
+
+    .focus-name.long {
+      font-size: 88px;
+      letter-spacing: 0.06em;
+      transform: scaleX(1.03);
+    }
+
+    .focus-name.xlong {
+      font-size: 64px;
+      letter-spacing: 0.05em;
+      line-height: 0.95;
+    }
+
+    .video-panel {
+      width: 776px;
+      height: 214px;
+      flex-shrink: 0;
+      background: #000;
+      border-left: 4px solid #e6a800;
+      overflow: hidden;
+    }
+
+    .video-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .video-inner video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      display: block;
+    }
+
+    .video-inner video.is-hidden { display: none; }
+
+    .video-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a1a;
+      color: #9ca3af;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .video-placeholder.visible { display: flex; }
+  </style>
+</head>
+<body>
+  <div class="viewport" id="viewport">
+    <div class="screen" id="screen">
+      <div class="route-panel">
+        <div id="stage">
+          <div class="map-layer" id="mapLayer">
+            <canvas id="routeCanvas" width="1144" height="214"></canvas>
+          </div>
+          <div class="focus-layer" id="focusLayer">
+            <div class="focus-wrap">
+              <p class="focus-name" id="focusName">—</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="video-panel" aria-label="Bilgilendirme videosu">
+        <div class="video-inner">
+          <video id="sideVideo" src="videoist.mp4" autoplay muted loop playsinline preload="auto"></video>
+          <div class="video-placeholder visible" id="videoPlaceholder">Yükleniyor…</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const SCREEN_W = 1920;
+    const W = 1144;
+    const H = 214;
+    const BORDER = 10;
+
+    const YELLOW = '#f5c518';
+    const YELLOW_DARK = '#e6a800';
+    const YELLOW_DEEP = '#c99200';
+    const YELLOW_LIGHT = '#ffe566';
+    const LINE_BG = '#f0f0f0';
+    const DOT_FUTURE = '#d4d4d4';
+
+    /* 34 — Avcılar → Zincirlikuyu (10 ana durak) */
+    const STOPS = [
+      'Avcılar',
+      'K.Çekmece',
+      'Beşyol',
+      'Şirinevler',
+      'Zeytinburnu',
+      'Topkapı',
+      'Ayvansaray',
+      'Darülaceze',
+      'Çağlayan',
+      'Zincirlikuyu',
+    ];
+
+    const TRAVEL_MS = 2600;
+    const ARRIVE_MS = 500;
+    const FOCUS_MS = 1000;
+    const FADE_MS = 550;
+
+    const canvas = document.getElementById('routeCanvas');
+    const ctx = canvas.getContext('2d');
+    const mapLayer = document.getElementById('mapLayer');
+    const focusLayer = document.getElementById('focusLayer');
+    const focusNameEl = document.getElementById('focusName');
+    const screenEl = document.getElementById('screen');
+    const sideVideo = document.getElementById('sideVideo');
+    const videoPlaceholder = document.getElementById('videoPlaceholder');
+
+    const play = {
+      x: BORDER,
+      y: BORDER,
+      w: W - BORDER * 2,
+      h: H - BORDER * 2,
+    };
+
+    const HEADER_Y = () => play.y + 30;
+
+    function routeY() {
+      return play.y + play.h * 0.72;
+    }
+
+    const route = {
+      x0: play.x + 56,
+      x1: play.x + play.w - 56,
+    };
+
+    let busImg = null;
+    let currentIndex = 0;
+    let segmentT = 0;
+    let phase = 'focus';
+    let phaseUntil = 0;
+
+    function initSideVideo() {
+      const showPlaceholder = () => {
+        sideVideo.classList.add('is-hidden');
+        videoPlaceholder.classList.add('visible');
+      };
+      const showVideo = () => {
+        sideVideo.classList.remove('is-hidden');
+        videoPlaceholder.classList.remove('visible');
+        sideVideo.play().catch(() => {});
+      };
+      sideVideo.addEventListener('loadeddata', showVideo);
+      sideVideo.addEventListener('canplay', () => sideVideo.play().catch(() => {}));
+      sideVideo.addEventListener('error', showPlaceholder);
+      if (sideVideo.readyState >= 2) showVideo();
+      else showPlaceholder();
+    }
+
+    function stopX(i) {
+      const n = STOPS.length - 1;
+      return route.x0 + (route.x1 - route.x0) * (i / n);
+    }
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function drawBorder() {
+      ctx.fillStyle = YELLOW_DARK;
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = YELLOW;
+      ctx.fillRect(BORDER / 2, BORDER / 2, W - BORDER, H - BORDER);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(play.x, play.y, play.w, play.h);
+    }
+
+    function truncateLabel(name, max) {
+      if (name.length <= max) return name;
+      return name.slice(0, max - 1) + '…';
+    }
+
+    function drawHeader() {
+      const y = HEADER_Y();
+      const pad = 14;
+
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#1a1d21';
+      ctx.font = '700 24px "Roboto Condensed", sans-serif';
+      ctx.fillText('İETT', play.x + pad, y);
+
+      const iettW = ctx.measureText('İETT').width;
+      ctx.fillStyle = YELLOW_DEEP;
+      ctx.font = '700 22px "Roboto Condensed", sans-serif';
+      const metroX = play.x + pad + iettW + 12;
+      ctx.fillText('Metrobüs · 34', metroX, y);
+
+      const metroW = ctx.measureText('Metrobüs · 34').width;
+      ctx.fillStyle = '#4b5563';
+      ctx.font = '600 18px Roboto, sans-serif';
+      ctx.fillText('Avcılar → Zincirlikuyu', metroX + metroW + 14, y);
+
+      ctx.textAlign = 'right';
+      ctx.fillStyle = YELLOW_DARK;
+      ctx.font = '700 24px "Roboto Condensed", sans-serif';
+      ctx.fillText('34', play.x + play.w - pad, y);
+      ctx.textAlign = 'left';
+    }
+
+    function drawRoute(upToIndex, busProgress) {
+      const endIdx = Math.min(upToIndex, STOPS.length - 1);
+      const busIdx = Math.min(upToIndex, STOPS.length - 2);
+      const t = Math.min(1, Math.max(0, busProgress));
+      const busX =
+        stopX(busIdx) + (stopX(busIdx + 1) - stopX(busIdx)) * easeOutCubic(t);
+      const ry = routeY();
+
+      ctx.strokeStyle = LINE_BG;
+      ctx.lineWidth = 8;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(route.x0, ry);
+      ctx.lineTo(route.x1, ry);
+      ctx.stroke();
+
+      const activeEndX =
+        t > 0 && upToIndex < STOPS.length - 1 ? busX : stopX(endIdx);
+      const grad = ctx.createLinearGradient(route.x0, ry, activeEndX, ry);
+      grad.addColorStop(0, YELLOW_LIGHT);
+      grad.addColorStop(1, YELLOW_DARK);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 11;
+      ctx.beginPath();
+      ctx.moveTo(route.x0, ry);
+      ctx.lineTo(activeEndX, ry);
+      ctx.stroke();
+
+      STOPS.forEach((name, i) => {
+        const x = stopX(i);
+        const passed = i <= endIdx;
+        const isCurrent = i === endIdx;
+        const r = isCurrent ? 14 : passed ? 10 : 6;
+
+        ctx.beginPath();
+        ctx.arc(x, ry, r, 0, Math.PI * 2);
+        ctx.fillStyle = passed ? YELLOW_DARK : DOT_FUTURE;
+        ctx.fill();
+        if (passed) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        if (passed) {
+          ctx.save();
+          ctx.translate(x, ry - 48);
+          ctx.rotate(-0.52);
+          ctx.fillStyle = isCurrent ? '#1a1d21' : '#6b7280';
+          ctx.font = isCurrent
+            ? '700 24px "Roboto Condensed", sans-serif'
+            : '600 19px "Roboto Condensed", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(truncateLabel(name, isCurrent ? 22 : 14), 0, 0);
+          ctx.restore();
+        }
+      });
+
+      const busTop = ry + 10;
+      if (busImg && busImg.complete) {
+        const sz = 36;
+        ctx.save();
+        ctx.filter =
+          'brightness(0) saturate(100%) invert(72%) sepia(85%) saturate(600%) hue-rotate(5deg) brightness(0.95)';
+        ctx.drawImage(busImg, busX - sz / 2, busTop, sz, sz);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = YELLOW_DEEP;
+        ctx.beginPath();
+        ctx.arc(busX, busTop + 16, 14, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawMap(upToIndex, busProgress) {
+      drawBorder();
+      drawHeader();
+      drawRoute(upToIndex, busProgress);
+    }
+
+    function showFocus(name) {
+      focusNameEl.textContent = name;
+      focusNameEl.classList.remove('long', 'xlong');
+      if (name.length > 32) focusNameEl.classList.add('xlong');
+      else if (name.length > 16) focusNameEl.classList.add('long');
+      mapLayer.classList.add('hidden');
+      focusLayer.classList.add('visible');
+    }
+
+    function showMap() {
+      focusLayer.classList.remove('visible');
+      mapLayer.classList.remove('hidden');
+    }
+
+    function setPhase(next, until) {
+      phase = next;
+      phaseUntil = until;
+    }
+
+    function beginTravel(now) {
+      segmentT = 0;
+      setPhase('travel', now + TRAVEL_MS);
+    }
+
+    function runFrame(now) {
+      if (phase === 'travel') {
+        segmentT = Math.min(1, 1 - (phaseUntil - now) / TRAVEL_MS);
+        drawMap(currentIndex, segmentT);
+        if (now >= phaseUntil) {
+          currentIndex += 1;
+          segmentT = 0;
+          setPhase('arrive', now + ARRIVE_MS);
+        }
+      } else if (phase === 'arrive') {
+        drawMap(currentIndex, 0);
+        if (now >= phaseUntil) {
+          setPhase('focus', now + FOCUS_MS);
+          showFocus(STOPS[currentIndex]);
+        }
+      } else if (phase === 'focus') {
+        if (now >= phaseUntil) {
+          showMap();
+          if (currentIndex >= STOPS.length - 1) {
+            currentIndex = 0;
+            setPhase('focus', now + FOCUS_MS);
+            showFocus(STOPS[0]);
+          } else {
+            beginTravel(now + FADE_MS);
+          }
+        }
+      }
+      requestAnimationFrame(runFrame);
+    }
+
+    function startLoop() {
+      currentIndex = 0;
+      showFocus(STOPS[0]);
+      setPhase('focus', performance.now() + FOCUS_MS);
+      requestAnimationFrame(runFrame);
+    }
+
+    function fitViewport() {
+      const scale = Math.min(
+        window.innerWidth / SCREEN_W,
+        window.innerHeight / H,
+        1
+      );
+      screenEl.style.transform = `scale(${scale})`;
+    }
+
+    busImg = new Image();
+    busImg.src = 'front-of-bus.png';
+
+    initSideVideo();
+    drawMap(0, 0);
+    fitViewport();
+    window.addEventListener('resize', fitViewport);
+    startLoop();
+  </script>
+</body>
+</html>

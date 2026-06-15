@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>ERPA — Akıllı Durak</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700;900&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1d21;
+      --white: #ffffff;
+      --bg: #f7f8fa;
+      --surface: #ffffff;
+      --border: #e8eaed;
+      --border-strong: #d1d5db;
+      --muted: #6b7280;
+      --muted-light: #9ca3af;
+      --orange: #e85d04;
+      --orange-soft: #fff4ec;
+      --orange-mid: #ff8c42;
+      --orange-dark: #c44d00;
+      --green: #16a34a;
+      --green-soft: #ecfdf3;
+      --panel-w: 480px;
+      --panel-h: 860px;
+      --shadow-panel: 0 20px 50px rgba(26, 29, 33, 0.1);
+      --row-h: 54px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Roboto', system-ui, sans-serif;
+      background: linear-gradient(160deg, #eef0f3 0%, #e2e6eb 100%);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .stage {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .panel {
+      width: var(--panel-w);
+      height: var(--panel-h);
+      max-height: calc(100vh - 48px);
+      max-width: calc(100vw - 48px);
+      background: var(--bg);
+      border: 2px solid var(--border);
+      box-shadow: var(--shadow-panel);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* —— Üst bar —— */
+    .top {
+      background: var(--white);
+      padding: 16px 14px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border-bottom: 3px solid var(--orange);
+    }
+
+    .top-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      max-width: 100%;
+    }
+
+    .top-icon {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .top-icon img {
+      width: 36px;
+      height: 36px;
+      display: block;
+      filter: brightness(0) saturate(100%) invert(42%) sepia(89%) saturate(1500%) hue-rotate(1deg);
+    }
+
+    .brand-title {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 1.55rem;
+      font-weight: 900;
+      color: var(--orange-dark);
+      letter-spacing: 0.04em;
+      line-height: 1.08;
+      text-align: center;
+      min-width: 0;
+    }
+
+    /* —— Durak —— */
+    .stop-banner {
+      background: var(--orange-soft);
+      padding: 12px 16px;
+      border-bottom: 1px solid #ffe0cc;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .stop-banner .stop-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: var(--orange-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 3px;
+    }
+
+    .stop-banner h1 {
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: var(--ink);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .live-badge .dot {
+      width: 7px;
+      height: 7px;
+      background: #22c55e;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.55; transform: scale(0.85); }
+    }
+
+    .live-badge span:last-child {
+      font-size: 0.58rem;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* —— Hat listesi —— */
+    .lines-panel {
+      flex: 1;
+      min-height: 0;
+      margin: 10px 12px 0;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .lines-panel-head {
+      padding: 10px 14px 8px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .lines-panel-head h2 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--ink);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .lines-table-head {
+      display: grid;
+      grid-template-columns: 58px 1fr 72px;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .lines-table-head span {
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .lines-table-head span:last-child {
+      text-align: right;
+    }
+
+    .lines-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hat-row {
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      background: var(--white);
+      transition: background-color 0.35s ease, box-shadow 0.35s ease;
+      contain: layout style paint;
+    }
+
+    .hat-row:last-child {
+      border-bottom: none;
+    }
+
+    .hat-row-main {
+      display: grid;
+      grid-template-columns: 58px 1fr 72px;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      min-height: var(--row-h);
+    }
+
+    .line-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      background: var(--orange);
+      padding: 4px 6px;
+    }
+
+    .hat-row .line-no {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 0.02em;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .dest-wrap {
+      min-width: 0;
+    }
+
+    .dest-wrap .dest {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--ink);
+      text-transform: uppercase;
+      line-height: 1.2;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .eta-box {
+      text-align: right;
+    }
+
+    .eta-box .eta-num {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      display: inline-block;
+    }
+
+    .eta-box .eta-num .unit {
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-left: 1px;
+      letter-spacing: 0;
+    }
+
+    .hat-row.active {
+      background: var(--orange-soft);
+      box-shadow: inset 4px 0 0 var(--orange);
+    }
+
+    .hat-row.active .line-badge {
+      background: var(--orange-dark);
+    }
+
+    .hat-row.active .eta-num {
+      color: var(--orange-dark);
+    }
+
+    .hat-row.arrived {
+      background: var(--green-soft);
+      box-shadow: inset 4px 0 0 var(--green);
+    }
+
+    .hat-row.arrived .line-badge {
+      background: var(--green);
+    }
+
+    .hat-row.arrived .eta-num {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 0.04em;
+    }
+
+    .hat-row.gone {
+      opacity: 0.45;
+    }
+
+    .hat-row.gone .eta-num {
+      font-size: 1rem;
+      color: var(--muted);
+    }
+
+    /* —— Otobüs konumu (açılır / kapanır) —— */
+    .hat-extra {
+      display: grid;
+      grid-template-rows: 0fr;
+      padding: 0 12px;
+      transition:
+        grid-template-rows 0.65s cubic-bezier(0.33, 1, 0.2, 1),
+        padding 0.65s cubic-bezier(0.33, 1, 0.2, 1);
+    }
+
+    .hat-row.active .hat-extra,
+    .hat-row.panel-open .hat-extra {
+      grid-template-rows: 1fr;
+      padding: 0 12px 14px;
+    }
+
+    .hat-extra-inner {
+      overflow: hidden;
+      min-height: 0;
+      opacity: 0;
+      transform: translateY(-16px) scale(0.98);
+      transform-origin: top center;
+      transition:
+        opacity 0.5s ease 0.12s,
+        transform 0.55s cubic-bezier(0.33, 1, 0.2, 1) 0.1s;
+    }
+
+    .hat-row.active .hat-extra-inner,
+    .hat-row.panel-open .hat-extra-inner {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .hat-row.panel-closing .hat-extra {
+      grid-template-rows: 0fr;
+      padding: 0 12px;
+    }
+
+    .hat-row.panel-closing .hat-extra-inner {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.98);
+      transition:
+        opacity 0.4s ease,
+        transform 0.45s cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    .track-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      padding: 10px 12px 12px;
+    }
+
+    .track-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .track-card-head .section-label {
+      font-size: 0.58rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .approach-tag {
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--orange-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      background: var(--orange-soft);
+      border: 1px solid #fed7aa;
+      display: none;
+    }
+
+    .hat-row.active .approach-tag {
+      display: inline-block;
+    }
+
+    .mini-route {
+      padding-top: 2px;
+    }
+
+    .track-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding: 0 1px;
+    }
+
+    .track-labels span {
+      font-size: 0.5rem;
+      font-weight: 700;
+      color: var(--muted-light);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .mini-track {
+      position: relative;
+      height: 30px;
+    }
+
+    .mini-rail {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 6px;
+      margin-top: -3px;
+      background: #e2e6eb;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .mini-line-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--orange-mid), var(--orange));
+      border-radius: 3px;
+      will-change: width;
+    }
+
+    .mini-bus {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 26px;
+      height: 26px;
+      margin-top: -13px;
+      transform: translate3d(0, 0, 0);
+      z-index: 2;
+      pointer-events: none;
+      backface-visibility: hidden;
+      filter: drop-shadow(0 1px 2px rgba(26, 29, 33, 0.12));
+    }
+
+    .hat-row.active .mini-bus {
+      will-change: transform;
+    }
+
+    .mini-bus img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: brightness(0) saturate(100%) invert(36%) sepia(93%) saturate(1200%) hue-rotate(2deg);
+    }
+
+    /* —— Alt ticker —— */
+    .footer-bar {
+      flex-shrink: 0;
+      background: var(--white);
+      border-top: 2px solid var(--orange);
+      margin: 10px 12px 12px;
+      padding: 10px 0;
+      overflow: hidden;
+    }
+
+    .ticker-wrap {
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .footer-ticker {
+      display: inline-flex;
+      white-space: nowrap;
+      width: max-content;
+      animation: ticker-scroll 26s linear infinite;
+      will-change: transform;
+    }
+
+    .footer-ticker span {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      padding-right: 3rem;
+      letter-spacing: 0.02em;
+      flex-shrink: 0;
+    }
+
+    @keyframes ticker-scroll {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-50%, 0, 0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <article class="panel" aria-label="Akıllı durak bilgi ekranı">
+      <header class="top">
+        <div class="top-brand">
+          <div class="top-icon" aria-hidden="true">
+            <img src="front-of-bus.png" alt="">
+          </div>
+          <h1 class="brand-title">ERPA AKILLI DURAK EKRANLARI</h1>
+        </div>
+      </header>
+
+      <div class="stop-banner">
+        <div>
+          <p class="stop-label">Durak</p>
+          <h1>Mecidiyeköy</h1>
+        </div>
+        <div class="live-badge" aria-hidden="true">
+          <span class="dot"></span>
+          <span>Canlı</span>
+        </div>
+      </div>
+
+      <section class="lines-panel" aria-labelledby="linesTitle">
+        <div class="lines-panel-head">
+          <h2 id="linesTitle">Gelen Hatlar</h2>
+        </div>
+        <div class="lines-table-head" aria-hidden="true">
+          <span>Hat</span>
+          <span aria-hidden="true"></span>
+          <span>Tahmin</span>
+        </div>
+        <div class="lines-scroll" id="linesList"></div>
+      </section>
+
+      <footer class="footer-bar">
+        <div class="ticker-wrap">
+          <div class="footer-ticker" aria-hidden="true">
+            <span>İETT · Gerçek zamanlı tahmin · ERPA Akıllı Durak · </span>
+            <span>İETT · Gerçek zamanlı tahmin · ERPA Akıllı Durak · </span>
+          </div>
+        </div>
+      </footer>
+    </article>
+  </div>
+
+  <script>
+    const ARRIVED_MS = 3200;
+    const RESET_MIN = 24;
+    const DRIFT_CHECK_MS = 1200;
+
+    const LINE_DEFS = [
+      { line: '34E', dest: 'Kadıköy' },
+      { line: '40', dest: 'Taksim' },
+      { line: '54H', dest: 'Sarıyer' },
+      { line: '25E', dest: 'Rumeli Hisarı' },
+      { line: '129T', dest: 'Beyazıt' },
+      { line: '29C', dest: 'Cevizlibağ' },
+      { line: '122H', dest: 'Yenikapı' },
+      { line: '48H', dest: 'İstinye' },
+    ];
+
+    const START_MINUTES = [6, 8, 9, 11, 12, 14, 16, 18];
+
+    const linesListEl = document.getElementById('linesList');
+
+    const PANEL_OPEN_MS = 720;
+    const PANEL_CLOSE_MS = 520;
+    const REORDER_MS = 580;
+
+    let buses = [];
+    let animating = false;
+    let rowById = new Map();
+    let lastOrderKey = '';
+
+    function sleep(ms) {
+      return new Promise((r) => setTimeout(r, ms));
+    }
+
+    function slowDriftMs(minutes) {
+      return 5500 + minutes * 950;
+    }
+
+    function fastTickMs(minutes) {
+      return Math.max(650, 380 + minutes * 85);
+    }
+
+    function initBuses() {
+      const now = Date.now();
+      buses = LINE_DEFS.map((def, i) => ({
+        id: i,
+        line: def.line,
+        dest: def.dest,
+        minutes: START_MINUTES[i],
+        phase: 'idle',
+        progress: 0,
+        countdownFrom: 0,
+        nextDriftAt: now + slowDriftMs(START_MINUTES[i]) + i * 700,
+      }));
+    }
+
+    function scheduleDrift(bus) {
+      bus.nextDriftAt = Date.now() + slowDriftMs(bus.minutes);
+    }
+
+    function tickBackgroundDrift() {
+      const now = Date.now();
+      let changed = false;
+
+      buses.forEach((b) => {
+        if (b.phase !== 'idle' || b.minutes <= 1) return;
+        if (now < b.nextDriftAt) return;
+        b.minutes -= 1;
+        scheduleDrift(b);
+        changed = true;
+      });
+
+      if (changed && !animating) render();
+    }
+
+    function sortRank(b) {
+      if (b.phase === 'active') return -1000;
+      if (b.phase === 'arrived') return -500;
+      if (b.phase === 'gone') return 8000;
+      return b.minutes;
+    }
+
+    function sortBuses() {
+      buses.sort((a, b) => sortRank(a) - sortRank(b));
+    }
+
+    function progressFromMinute(from, current) {
+      if (current <= 0) return 96;
+      const done = (from - current) / from;
+      return 14 + done * 82;
+    }
+
+    function etaHtml(b) {
+      if (b.phase === 'arrived') return 'GELDİ';
+      if (b.phase === 'gone') return '—';
+      return `${b.minutes}<span class="unit">dk</span>`;
+    }
+
+    function createRowEl(b) {
+      const el = document.createElement('article');
+      el.className = 'hat-row';
+      el.dataset.id = String(b.id);
+      el.innerHTML = `
+        <div class="hat-row-main">
+          <div class="line-badge"><span class="line-no">${b.line}</span></div>
+          <div class="dest-wrap"><span class="dest">${b.dest}</span></div>
+          <div class="eta-box"><div class="eta-num">${etaHtml(b)}</div></div>
+        </div>
+        <div class="hat-extra">
+          <div class="hat-extra-inner">
+            <div class="track-card">
+              <div class="track-card-head">
+                <p class="section-label">Otobüs konumu</p>
+                <span class="approach-tag">Yaklaşıyor</span>
+              </div>
+              <div class="mini-route">
+                <div class="track-labels" aria-hidden="true">
+                  <span>Durak</span>
+                  <span>Hat</span>
+                </div>
+                <div class="mini-track">
+                  <div class="mini-rail"><div class="mini-line-fill"></div></div>
+                  <div class="mini-bus"><img src="front-of-bus.png" alt=""></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      return el;
+    }
+
+    function setRowPhase(el, phase) {
+      el.classList.remove('active', 'arrived', 'gone');
+      if (phase && phase !== 'idle') el.classList.add(phase);
+    }
+
+    async function openBusPanel(row) {
+      row.classList.add('panel-open');
+      await sleep(PANEL_OPEN_MS);
+    }
+
+    async function closeBusPanel(row) {
+      row.classList.add('panel-closing');
+      row.classList.remove('panel-open');
+      await sleep(PANEL_CLOSE_MS);
+      row.classList.remove('panel-closing');
+    }
+
+    function playReorderFlip() {
+      const items = [...linesListEl.children];
+      const firstRects = new Map(
+        items.map((el) => [el.dataset.id, el.getBoundingClientRect()])
+      );
+
+      reorderDom();
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          items.forEach((el) => {
+            const first = firstRects.get(el.dataset.id);
+            if (!first) return;
+            const last = el.getBoundingClientRect();
+            const deltaY = first.top - last.top;
+            if (Math.abs(deltaY) < 2) return;
+            el.style.transition = 'transform 0s';
+            el.style.transform = `translateY(${deltaY}px)`;
+          });
+
+          requestAnimationFrame(() => {
+            items.forEach((el) => {
+              el.style.transition = `transform ${REORDER_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+              el.style.transform = '';
+            });
+            setTimeout(() => {
+              items.forEach((el) => {
+                el.style.transition = '';
+                el.style.transform = '';
+              });
+            }, REORDER_MS + 40);
+          });
+        });
+      });
+    }
+
+    const BUS_W = 26;
+
+    function busXForProgress(trackW, progress) {
+      const p = Math.min(100, Math.max(0, progress));
+      if (trackW <= BUS_W) return 0;
+      return ((trackW - BUS_W) * p) / 100;
+    }
+
+    function measureTrack(track) {
+      const rail = track.querySelector('.mini-rail');
+      return rail ? rail.getBoundingClientRect().width : 0;
+    }
+
+    function setBusPosition(trackW, fill, bus, progress, durationMs, instant) {
+      const dur = durationMs || 1400;
+      const x = busXForProgress(trackW, progress);
+      const p = Math.min(100, Math.max(0, progress));
+
+      if (instant) {
+        fill.style.transition = 'none';
+        bus.style.transition = 'none';
+      } else {
+        fill.style.transition = `width ${dur}ms linear`;
+        bus.style.transition = `transform ${dur}ms linear`;
+      }
+
+      fill.style.width = `${p}%`;
+      bus.style.transform = `translate3d(${x}px, 0, 0)`;
+
+      if (instant) {
+        void bus.offsetWidth;
+        fill.style.transition = '';
+        bus.style.transition = '';
+      }
+    }
+
+    function updateEta(el, b) {
+      const eta = el.querySelector('.eta-num');
+      const html = etaHtml(b);
+      if (eta.innerHTML !== html) eta.innerHTML = html;
+    }
+
+    function updateRowEl(el, b, { moveMs = 1400, trackW = 0 } = {}) {
+      if (!el) return;
+      setRowPhase(el, b.phase);
+      updateEta(el, b);
+
+      const fill = el.querySelector('.mini-line-fill');
+      const bus = el.querySelector('.mini-bus');
+      if (!fill || !bus) return;
+
+      if (b.phase === 'active' || b.phase === 'arrived') {
+        const w = trackW || measureTrack(el.querySelector('.mini-track'));
+        setBusPosition(w, fill, bus, b.progress, moveMs, false);
+      } else {
+        fill.style.transition = 'none';
+        bus.style.transition = 'none';
+        fill.style.width = '0%';
+        bus.style.transform = 'translate3d(0, 0, 0)';
+      }
+    }
+
+    function orderKey() {
+      return buses.map((b) => `${b.id}:${b.phase}:${b.minutes}`).join('|');
+    }
+
+    function reorderDom() {
+      buses.forEach((b) => {
+        const el = rowById.get(b.id);
+        if (el) linesListEl.appendChild(el);
+      });
+    }
+
+    function mountRows() {
+      buses.forEach((b) => {
+        const el = createRowEl(b);
+        rowById.set(b.id, el);
+        linesListEl.appendChild(el);
+      });
+    }
+
+    function render(options = {}) {
+      if (animating && !options.force) return;
+
+      sortBuses();
+      const key = orderKey();
+      const orderChanged = key !== lastOrderKey;
+
+      buses.forEach((b) => {
+        updateRowEl(rowById.get(b.id), b, { moveMs: options.moveMs });
+      });
+
+      if (orderChanged) {
+        lastOrderKey = key;
+        if (options.animateReorder) {
+          playReorderFlip();
+        } else {
+          reorderDom();
+        }
+      }
+    }
+
+    function pickNextBus() {
+      const idle = buses.filter((b) => b.phase === 'idle');
+      if (!idle.length) return null;
+      return idle.reduce((a, b) => (b.minutes < a.minutes ? b : a));
+    }
+
+    async function animateBus(bus) {
+      animating = true;
+
+      bus.phase = 'active';
+      bus.countdownFrom = bus.minutes;
+      bus.progress = 0;
+
+      sortBuses();
+      lastOrderKey = orderKey();
+      reorderDom();
+
+      const row = rowById.get(bus.id);
+      setRowPhase(row, 'active');
+      updateEta(row, bus);
+      await openBusPanel(row);
+
+      const fill = row.querySelector('.mini-line-fill');
+      const busEl = row.querySelector('.mini-bus');
+      const trackW = measureTrack(row.querySelector('.mini-track'));
+
+      setBusPosition(trackW, fill, busEl, 0, 0, true);
+      await sleep(80);
+      setBusPosition(trackW, fill, busEl, 12, 450, false);
+      await sleep(480);
+
+      while (bus.minutes >= 1) {
+        const wait = fastTickMs(bus.minutes);
+        bus.progress = progressFromMinute(bus.countdownFrom, bus.minutes);
+        setBusPosition(trackW, fill, busEl, bus.progress, wait, false);
+        updateEta(row, bus);
+        await sleep(wait);
+        if (bus.minutes > 1) bus.minutes -= 1;
+        else break;
+      }
+
+      bus.phase = 'arrived';
+      bus.progress = 98;
+      setRowPhase(row, 'arrived');
+      setBusPosition(trackW, fill, busEl, 98, 600, false);
+      updateEta(row, bus);
+      await closeBusPanel(row);
+      await sleep(Math.max(0, ARRIVED_MS - PANEL_CLOSE_MS));
+
+      bus.phase = 'gone';
+      bus.progress = 0;
+      setRowPhase(row, 'gone');
+      updateEta(row, bus);
+      setBusPosition(trackW, fill, busEl, 0, 0, true);
+      await sleep(400);
+
+      bus.phase = 'idle';
+      bus.minutes = RESET_MIN + Math.floor(Math.random() * 8);
+      bus.progress = 0;
+      scheduleDrift(bus);
+
+      animating = false;
+      lastOrderKey = '';
+      sortBuses();
+      buses.forEach((b) => updateRowEl(rowById.get(b.id), b));
+      playReorderFlip();
+      await sleep(REORDER_MS + 80);
+    }
+
+    async function runLoop() {
+      while (true) {
+        const next = pickNextBus();
+        if (!next) {
+          await sleep(300);
+          continue;
+        }
+        await animateBus(next);
+        await sleep(600);
+      }
+    }
+
+    initBuses();
+    mountRows();
+    render();
+    setInterval(tickBackgroundDrift, DRIFT_CHECK_MS);
+    runLoop();
+  </script>
+</body>
+</html>

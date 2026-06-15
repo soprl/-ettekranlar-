@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>06A — Kızılay · Çayyolu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #0b2347;
+      --navy-bar: #0d2a52;
+      --badge-blue: #1a4f9c;
+      --accent: #1a73e8;
+      --white: #fff;
+      --map-bg: #e4e8ec;
+      --text: #0a0a0a;
+      --muted: #a8b0b8;
+      --line: #bcc4cc;
+      --header-h: 92px;
+      --footer-h: 78px;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--navy);
+    }
+
+    .screen {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--white);
+    }
+
+    /* —— Üst bar —— */
+    .header {
+      height: var(--header-h);
+      background: var(--navy-bar);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      gap: 24px;
+      flex-shrink: 0;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Sol üst ikon — front-of-bus.png */
+    .icon-slot {
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .icon-slot--header {
+      width: 56px;
+      height: 56px;
+      background: transparent;
+    }
+
+    .icon-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Otobüs PNG: şeffaf arka plan kalır, çizim beyaz */
+    .icon-slot--header img {
+      filter: brightness(0) invert(1);
+    }
+
+    .line-badge {
+      background: var(--badge-blue);
+      padding: 10px 22px 8px;
+      border-radius: 2px;
+      line-height: 1;
+    }
+
+    .line-number {
+      font-family: 'Roboto Condensed', 'Roboto', sans-serif;
+      font-size: 3.1rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 0.02em;
+    }
+
+    .route-name {
+      text-align: left;
+      font-size: 2.65rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      line-height: 1.1;
+    }
+
+    .clock {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--white);
+      font-variant-numeric: tabular-nums;
+      min-width: 80px;
+      text-align: right;
+    }
+
+    /* —— Gövde —— */
+    .body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 52% 48%;
+      min-height: 0;
+    }
+
+    /* Sol: gri harita */
+    .route-map {
+      background: var(--map-bg);
+      padding: 28px 36px 20px 48px;
+      display: flex;
+      min-height: 0;
+    }
+
+    .route-inner {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      column-gap: 22px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .rail {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .rail-line {
+      position: absolute;
+      top: 10px;
+      bottom: 26px;
+      left: 50%;
+      width: 7px;
+      background: var(--line);
+      transform: translateX(-50%);
+      border-radius: 3px;
+    }
+
+    .rail-arrow {
+      margin-top: auto;
+      width: 0;
+      height: 0;
+      border-left: 11px solid transparent;
+      border-right: 11px solid transparent;
+      border-top: 16px solid var(--line);
+    }
+
+    .rail-markers {
+      list-style: none;
+      flex: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 1;
+      padding: 6px 0 18px;
+    }
+
+    .rail-markers li {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 0;
+      position: relative;
+    }
+
+    .marker {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--line);
+      flex-shrink: 0;
+      transition: transform 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .marker.passed {
+      background: #8e98a2;
+    }
+
+    .marker.active {
+      width: 30px;
+      height: 30px;
+      background: var(--white);
+      border: 6px solid var(--accent);
+      box-shadow: 0 0 0 2px var(--map-bg);
+    }
+
+    .stop-rows {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 2px 0 16px;
+    }
+
+    .stop-row {
+      display: flex;
+      align-items: center;
+      min-height: 0;
+    }
+
+    .stop-label {
+      font-family: 'Roboto Condensed', 'Roboto', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1.2;
+      transition: color 0.35s ease, font-weight 0.35s ease, font-size 0.35s ease;
+    }
+
+    .stop-row.active .stop-label {
+      font-size: 2.95rem;
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    .stop-row.passed .stop-label {
+      color: #b5bdc5;
+    }
+
+    /* Sağ: bilgi */
+    .info {
+      background: var(--white);
+      padding: 52px 48px 40px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .info-label {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .info-value {
+      font-family: 'Roboto Condensed', 'Roboto', sans-serif;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      line-height: 1;
+      letter-spacing: 0.02em;
+      transition: opacity 0.25s ease;
+    }
+
+    .info-value.dim { opacity: 0; }
+
+    .next-name {
+      font-size: clamp(5.25rem, 12vh, 8.5rem);
+    }
+
+    .info-rule {
+      height: 3px;
+      background: var(--line);
+      margin: 40px 0 36px;
+      max-width: 420px;
+    }
+
+    .remain-num {
+      font-size: clamp(6.5rem, 16vh, 10.5rem);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* —— Alt bar —— */
+    .footer {
+      height: var(--footer-h);
+      background: var(--navy-bar);
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Sol alt ikon — public-relation.png, şeffaf arka plan + beyaz */
+    .icon-slot--footer {
+      width: 52px;
+      height: 52px;
+      background: transparent;
+      margin-left: 32px;
+      margin-right: 8px;
+    }
+
+    .icon-slot--footer img {
+      filter: brightness(0) invert(1);
+    }
+
+    .ticker-wrap {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      margin-left: 12px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .ticker {
+      display: inline-flex;
+      flex-shrink: 0;
+      width: max-content;
+      white-space: nowrap;
+      animation: ticker-scroll 22s linear infinite;
+      will-change: transform;
+    }
+
+    .ticker-text {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-right: 5rem;
+      flex-shrink: 0;
+    }
+
+    @keyframes ticker-scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+  </style>
+</head>
+<body>
+  <div class="screen">
+    <header class="header">
+      <div class="header-brand">
+        <div class="icon-slot icon-slot--header">
+          <img src="front-of-bus.png" alt="Otobüs ikonu">
+        </div>
+        <div class="line-badge"><span class="line-number">06A</span></div>
+        <h1 class="route-name">Kızılay — Çayyolu</h1>
+      </div>
+      <time class="clock" id="clock">10:24</time>
+    </header>
+
+    <div class="body">
+      <section class="route-map" aria-label="Güzergah">
+        <div class="route-inner">
+          <div class="rail" aria-hidden="true">
+            <div class="rail-line"></div>
+            <ul class="rail-markers" id="markers"></ul>
+            <div class="rail-arrow"></div>
+          </div>
+          <ul class="stop-rows" id="stopRows"></ul>
+        </div>
+      </section>
+
+      <section class="info" aria-label="Durak bilgisi">
+        <p class="info-label">Sonraki Durak</p>
+        <p class="info-value next-name" id="nextStop">KIZILAY</p>
+        <div class="info-rule"></div>
+        <p class="info-label">Kalan Durak</p>
+        <p class="info-value remain-num" id="remaining">6</p>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <div class="icon-slot icon-slot--footer">
+        <img src="public-relation.png" alt="Duyuru ikonu">
+      </div>
+      <div class="ticker-wrap">
+        <div class="ticker" aria-hidden="true">
+          <span class="ticker-text">Lütfen engelli, yaşlı ve hamile yolculara yer veriniz.</span>
+          <span class="ticker-text">EGO mobil uygulamasından güzergâh bilgisine ulaşabilirsiniz.</span>
+          <span class="ticker-text">Duraklarda güvenliğiniz için sarı çizgiye basmayınız.</span>
+          <span class="ticker-text">AnkaraKart bakiyenizi kontrol etmeyi unutmayınız.</span>
+          <span class="ticker-text">Lütfen engelli, yaşlı ve hamile yolculara yer veriniz.</span>
+          <span class="ticker-text">EGO mobil uygulamasından güzergâh bilgisine ulaşabilirsiniz.</span>
+          <span class="ticker-text">Duraklarda güvenliğiniz için sarı çizgiye basmayınız.</span>
+          <span class="ticker-text">AnkaraKart bakiyenizi kontrol etmeyi unutmayınız.</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const STOPS = [
+      'KIZILAY',
+      'ZAFER',
+      'SİHHİYE',
+      'ADLİYE',
+      'KOLEJ',
+      'ÇAYYOLU'
+    ];
+
+    const INTERVAL_MS = 15000;
+    const START_HOUR = 10;
+    const START_MINUTE = 24;
+
+    let approachIndex = 0;
+    let extraMinutes = 0;
+
+    const markersEl = document.getElementById('markers');
+    const stopRowsEl = document.getElementById('stopRows');
+    const nextStopEl = document.getElementById('nextStop');
+    const remainingEl = document.getElementById('remaining');
+    const clockEl = document.getElementById('clock');
+
+    function formatClock() {
+      const total = START_MINUTE + extraMinutes;
+      const h = START_HOUR + Math.floor(total / 60);
+      const m = total % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    function remainingStops() {
+      return Math.max(0, STOPS.length - approachIndex);
+    }
+
+    function setValue(el, text) {
+      el.classList.add('dim');
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          el.textContent = text;
+          el.classList.remove('dim');
+        }, 180);
+      });
+    }
+
+    function renderRoute() {
+      markersEl.innerHTML = STOPS.map((_, i) => {
+        let cls = 'marker';
+        if (i < approachIndex) cls += ' passed';
+        else if (i === approachIndex) cls += ' active';
+        return `<li><span class="${cls}"></span></li>`;
+      }).join('');
+
+      stopRowsEl.innerHTML = STOPS.map((name, i) => {
+        let cls = 'stop-row';
+        if (i < approachIndex) cls += ' passed';
+        else if (i === approachIndex) cls += ' active';
+        return `<li class="${cls}"><span class="stop-label">${name}</span></li>`;
+      }).join('');
+    }
+
+    function refresh() {
+      const name = approachIndex >= STOPS.length
+        ? 'SON DURAK'
+        : STOPS[approachIndex];
+
+      setValue(nextStopEl, name);
+      setValue(remainingEl, String(remainingStops()));
+      clockEl.textContent = formatClock();
+      renderRoute();
+    }
+
+    function advance() {
+      if (approachIndex >= STOPS.length - 1) return;
+      approachIndex += 1;
+      extraMinutes += 1;
+      refresh();
+    }
+
+    refresh();
+    setInterval(advance, INTERVAL_MS);
+  </script>
+</body>
+</html>

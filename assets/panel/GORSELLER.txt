@@ -1,0 +1,7 @@
+Görseller proje kökünde (panel-dikey.html ile aynı klasör):
+
+  haber1.png   → 1. haber (Ulaşım)
+  haber2.png   → 2. haber (Şehir)
+  haber3.png   → 3. haber (Hava)
+  haber4.png   → 4. haber (Kültür)
+  haber5.png   → 5. haber (Trafik)

@@ -1,0 +1,28 @@
+{
+  "name": "durak",
+  "private": true,
+  "scripts": {
+    "start": "python3 server.py",
+    "dev": "npm run start",
+    "record:metrobus": "node scripts/record-metrobus.mjs",
+    "record:metrobus-iett": "node scripts/record-metrobus-iett.mjs",
+    "record:42.5": "node scripts/record-42.5.mjs",
+    "record:27.7": "node scripts/record-27.7.mjs",
+    "record:38inc": "node scripts/record-38inc.mjs",
+    "record:43durak": "node scripts/record-43durak.mjs",
+    "record:37durakekrani": "node scripts/record-37durakekrani.mjs",
+    "record:istanbul": "node scripts/record-istanbul.mjs",
+    "record:06a": "node scripts/record-06a.mjs",
+    "record:23.8": "node scripts/record-23.8.mjs",
+    "record:23.8-iett": "node scripts/record-23.8-iett.mjs",
+    "record:panel-dikey": "node scripts/record-panel-dikey.mjs",
+    "record:31.5": "node scripts/record-31.5.mjs",
+    "record:21.5-1": "node scripts/record-21.5-1.mjs",
+    "record:21.5-2": "node scripts/record-21.5-2.mjs",
+    "record:21.5-3": "node scripts/record-21.5-3.mjs",
+    "record:21.5-4": "node scripts/record-21.5-4.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}

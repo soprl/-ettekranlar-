@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>ŞEHRİN GÜNDEMİ ARTIK EKRANINIZDA — Dikey Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #0b2347;
+      --navy-bar: #0d2a52;
+      --badge-blue: #1a4f9c;
+      --accent: #1a73e8;
+      --accent-bright: #3d8ef0;
+      --panel-bg: #e8eef5;
+      --white: #ffffff;
+      --header-h: 280px;
+      --footer-h: 104px;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Roboto', system-ui, sans-serif;
+      background: var(--navy);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .viewport {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--navy);
+    }
+
+    .screen {
+      width: 1080px;
+      height: 1920px;
+      flex-shrink: 0;
+      transform-origin: center center;
+      background: var(--panel-bg);
+      border: 3px solid var(--badge-blue);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    body.record-mode .viewport {
+      width: 1080px;
+      height: 1920px;
+      display: block;
+      background: var(--panel-bg);
+    }
+
+    body.record-mode .screen {
+      transform: none !important;
+      border: none;
+    }
+
+    .panel-header {
+      flex-shrink: 0;
+      height: var(--header-h);
+      background: var(--navy-bar);
+      padding: 28px 40px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      border-bottom: 4px solid var(--badge-blue);
+    }
+
+    .header-title {
+      flex: 1;
+      min-width: 0;
+      font-size: 4rem;
+      font-weight: 900;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1.15;
+      text-align: left;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header-side {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .live-dot {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .header-clock {
+      font-variant-numeric: tabular-nums;
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 0.04em;
+    }
+
+    .live-dot::before {
+      content: '';
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #e53935;
+      box-shadow: 0 0 0 6px rgba(229, 57, 53, 0.35);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    .slides-wrap {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+      background: #111;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.85s ease, visibility 0.85s;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      z-index: 1;
+    }
+
+    .slide-img-wrap {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .slide-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.08);
+      transition: transform 8s linear;
+    }
+
+    .slide.active .slide-img {
+      transform: scale(1);
+    }
+
+    .slide-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(11, 35, 71, 0.2) 0%,
+        rgba(11, 35, 71, 0.05) 35%,
+        rgba(11, 35, 71, 0.78) 68%,
+        rgba(11, 35, 71, 0.96) 100%
+      );
+    }
+
+    .slide-img-wrap.no-img {
+      background: linear-gradient(160deg, var(--badge-blue) 0%, var(--navy) 100%);
+    }
+
+    .slide-img-wrap.no-img .slide-img {
+      display: none;
+    }
+
+    .slide-content {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 56px 48px 64px;
+      z-index: 2;
+    }
+
+    .slide-tag {
+      display: inline-block;
+      font-size: 1.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-bright);
+      background: rgba(26, 79, 156, 0.9);
+      padding: 14px 24px;
+      margin-bottom: 24px;
+      animation: tag-in 0.6s ease 0.2s both;
+    }
+
+    .slide.active .slide-tag {
+      animation: tag-in 0.6s ease 0.15s both;
+    }
+
+    @keyframes tag-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slide-title {
+      font-size: 3.75rem;
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .slide.active .slide-title {
+      animation: text-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+    }
+
+    .slide-summary {
+      font-size: 2.15rem;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .slide.active .slide-summary {
+      animation: text-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+    }
+
+    @keyframes text-in {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      z-index: 3;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent-bright);
+    }
+
+    .slide.active .progress-fill {
+      animation: progress-fill var(--slide-dur, 7s) linear forwards;
+    }
+
+    .slide:not(.active) .progress-fill {
+      animation: none;
+      width: 0;
+    }
+
+    @keyframes progress-fill {
+      to { width: 100%; }
+    }
+
+    .panel-footer {
+      flex-shrink: 0;
+      height: var(--footer-h);
+      background: var(--badge-blue);
+      padding: 0;
+      overflow: hidden;
+      border-top: 3px solid var(--navy-bar);
+      display: flex;
+      align-items: center;
+    }
+
+    .footer-ticker {
+      display: inline-flex;
+      white-space: nowrap;
+      animation: ticker 35s linear infinite;
+    }
+
+    .footer-ticker span {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-right: 5rem;
+      line-height: var(--footer-h);
+    }
+
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="viewport" id="viewport">
+    <article class="screen" id="screen" aria-label="Dikey bilgilendirme paneli">
+      <header class="panel-header">
+        <h1 class="header-title">ŞEHRİN GÜNDEMİ ARTIK EKRANINIZDA</h1>
+        <div class="header-side">
+          <div class="live-dot" aria-hidden="true">Canlı</div>
+          <time id="clock" class="header-clock">10:24</time>
+        </div>
+      </header>
+
+      <div class="slides-wrap" id="slidesWrap">
+        <!-- Slides injected by JS -->
+      </div>
+
+      <footer class="panel-footer">
+        <div class="footer-ticker" aria-hidden="true">
+          <span>İETT: Metrobüs hattında yoğun saatlerde sefer aralığı 2 dakikaya indirildi. · </span>
+          <span>M7 Mecidiyeköy–Mahmutbey metrosunda test sürüşleri başladı. · </span>
+          <span>İstanbul Havalimanı Havaist seferleri 15 dakikaya çekildi. · </span>
+          <span>İETT: Metrobüs hattında yoğun saatlerde sefer aralığı 2 dakikaya indirildi. · </span>
+          <span>M7 Mecidiyeköy–Mahmutbey metrosunda test sürüşleri başladı. · </span>
+          <span>İstanbul Havalimanı Havaist seferleri 15 dakikaya çekildi. · </span>
+        </div>
+      </footer>
+    </article>
+  </div>
+
+  <script>
+    const SCREEN_W = 1080;
+    const SCREEN_H = 1920;
+    const IS_RECORD = new URLSearchParams(location.search).has('record');
+    const SLIDE_MS = 7000;
+
+    const NEWS = [
+      {
+        tag: 'Ulaşım',
+        title: 'Marmaray\'da hafta sonu ek seferler devreye alındı.',
+        summary: 'TCDD Taşımacılık, Cumartesi ve Pazar günleri Halkalı–Gebze hattında 12 ek sefer planladığını açıkladı. Yoğun saatlerde tren aralığı 6 dakikaya indirilecek.',
+        image: 'haber1.png'
+      },
+      {
+        tag: 'Şehir',
+        title: 'Galata Kulesi\'nde restorasyon ikinci etaba geçti.',
+        summary: 'İBB Kültür A.Ş., çalışmalar nedeniyle ziyaretçi girişinin 15 Haziran\'a kadar kısıtlanacağını bildirdi. Tarihi Yarımada\'da yönlendirme levhaları güncellendi.',
+        image: 'haber2.png'
+      },
+      {
+        tag: 'Hava',
+        title: 'İstanbul\'da yarın sağanak yağış bekleniyor.',
+        summary: 'Meteoroloji Genel Müdürlüğü, Anadolu yakasında öğleden sonra yerel sağanak öngördü. Marmara\'da kuvvetli lodos uyarısı yapıldı.',
+        image: 'haber3.png'
+      },
+      {
+        tag: 'Kültür',
+        title: 'Beşiktaş sahilinde yaz konserleri başlıyor.',
+        summary: 'İBB, Haziran ayı boyunca her cumartesi akşamı ücretsiz açık hava konserleri düzenleyecek. İlk etkinlik 14 Haziran\'da Sahil Park\'ta yapılacak.',
+        image: 'haber4.png'
+      },
+      {
+        tag: 'Trafik',
+        title: 'FSM Köprüsü\'nde bakım çalışması trafiği yavaşlattı.',
+        summary: 'Gece 00.00–05.00 arası yapılan yol bakımı nedeniyle Avrupa yönünde tek şerit uygulaması sürüyor. Sürücülere alternatif güzergâh önerildi.',
+        image: 'haber5.png'
+      }
+    ];
+
+    let current = 0;
+    let slideTimer = null;
+
+    const slidesWrap = document.getElementById('slidesWrap');
+    const clockEl = document.getElementById('clock');
+    const screenEl = document.getElementById('screen');
+
+    function buildSlides() {
+      slidesWrap.innerHTML = NEWS.map((item, i) => `
+        <section class="slide${i === 0 ? ' active' : ''}" data-index="${i}" aria-hidden="${i !== 0}">
+          <div class="progress-bar"><div class="progress-fill" style="--slide-dur: ${SLIDE_MS}ms"></div></div>
+          <div class="slide-img-wrap">
+            <img class="slide-img" src="${item.image}" alt="" loading="${i < 2 ? 'eager' : 'lazy'}"
+              onerror="this.parentElement.classList.add('no-img')">
+          </div>
+          <div class="slide-overlay"></div>
+          <div class="slide-content">
+            <span class="slide-tag">${item.tag}</span>
+            <h2 class="slide-title">${item.title}</h2>
+            <p class="slide-summary">${item.summary}</p>
+          </div>
+        </section>
+      `).join('');
+    }
+
+    function showSlide(index) {
+      const slides = slidesWrap.querySelectorAll('.slide');
+      current = (index + NEWS.length) % NEWS.length;
+      slides.forEach((s, i) => {
+        const on = i === current;
+        s.classList.toggle('active', on);
+        s.setAttribute('aria-hidden', on ? 'false' : 'true');
+      });
+    }
+
+    function goTo(index) {
+      showSlide(index);
+      clearInterval(slideTimer);
+      slideTimer = setInterval(() => goTo(current + 1), SLIDE_MS);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      clockEl.textContent = now.toLocaleTimeString('tr-TR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    }
+
+    function fitViewport() {
+      if (IS_RECORD) {
+        document.body.classList.add('record-mode');
+        screenEl.style.transform = 'none';
+        return;
+      }
+      document.body.classList.remove('record-mode');
+      const scale = Math.min(
+        window.innerWidth / SCREEN_W,
+        window.innerHeight / SCREEN_H,
+        1
+      );
+      screenEl.style.transform = scale < 1 ? `scale(${scale})` : 'none';
+    }
+
+    buildSlides();
+    updateClock();
+    setInterval(updateClock, 1000);
+    fitViewport();
+    window.addEventListener('resize', fitViewport);
+    goTo(0);
+  </script>
+</body>
+</html>
