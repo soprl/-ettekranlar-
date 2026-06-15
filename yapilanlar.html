@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Yapılanlar — ERPA Durak Ekranları</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #0b2347;
+      --surface: #ffffff;
+      --border: #b8dce8;
+      --primary: #1a8fb8;
+      --primary-dark: #0d4f6e;
+      --primary-soft: #d4eef8;
+      --gold: #f5b942;
+      --muted: #4a6578;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Roboto', system-ui, sans-serif;
+      background: linear-gradient(160deg, #0a1a28 0%, #0d4f6e 45%, #1a8fb8 100%);
+      color: var(--ink);
+      padding: 32px 24px 48px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap { max-width: 1100px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+      color: #fff;
+    }
+
+    header h1 {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      font-size: 1rem;
+      opacity: 0.9;
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    .top-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    .top-links a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      transition: background 0.2s ease;
+    }
+
+    .top-links a:hover { background: rgba(255, 255, 255, 0.22); }
+
+    section { margin-bottom: 32px; }
+
+    .section-title {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--gold);
+      margin-bottom: 6px;
+      padding-left: 4px;
+    }
+
+    .section-sub {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.82);
+      margin-bottom: 14px;
+      padding-left: 4px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+    }
+
+    a.card {
+      display: block;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    a.card:hover {
+      transform: translateY(-3px);
+      border-color: var(--primary);
+      box-shadow: 0 12px 32px rgba(13, 79, 110, 0.25);
+    }
+
+    a.card:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    .card--static {
+      display: block;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+      cursor: default;
+    }
+
+    .card--static .card-placeholder {
+      width: 100%;
+      height: 160px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      border: 1px dashed var(--border);
+      background: linear-gradient(145deg, #eef6fb 0%, #dceef8 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      letter-spacing: 0.02em;
+      line-height: 1.4;
+    }
+
+    .card h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 6px;
+      line-height: 1.25;
+    }
+
+    .card .meta {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .card .desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 10px;
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    .tag.bordo { background: #fce8ef; color: #6b1834; }
+    .tag.yesil { background: #e6f5ec; color: #125a38; }
+    .tag.turkuaz { background: #d4f0f4; color: #066670; }
+    .tag.turuncu { background: #fff4ec; color: #9a3d00; }
+    .tag.dikey { background: #e8f0fe; color: #1a4f9c; }
+
+    .card-thumb {
+      display: block;
+      width: 100%;
+      max-height: 220px;
+      object-fit: cover;
+      object-position: center top;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      background: #f4f8fb;
+    }
+
+    a.card--visual { padding-top: 14px; }
+
+    .card-preview {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      background: #0a1620;
+      position: relative;
+    }
+
+    .card-preview iframe {
+      border: 0;
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: top left;
+    }
+
+    .card-preview--yatay iframe {
+      width: 1920px;
+      height: 1080px;
+      transform: scale(0.156);
+    }
+
+    .card-preview--dikey iframe {
+      width: 1080px;
+      height: 1920px;
+      transform: scale(0.185);
+    }
+
+    .card-preview--7 {
+      height: 174px;
+    }
+
+    .card-preview--7 iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1024px;
+      height: 600px;
+      transform: scale(0.29);
+      transform-origin: top left;
+      border: 0;
+      pointer-events: none;
+    }
+
+    .card-preview--7 video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1024px;
+      height: 600px;
+      transform: scale(0.29);
+      transform-origin: top left;
+      object-fit: cover;
+      background: #000;
+      pointer-events: none;
+    }
+
+    .card-preview--10 {
+      height: 174px;
+    }
+
+    .card-preview--10 iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1280px;
+      height: 800px;
+      transform: scale(0.234);
+      transform-origin: top left;
+      border: 0;
+      pointer-events: none;
+    }
+
+    .card-preview--bar {
+      height: 56px;
+      display: flex;
+      align-items: center;
+    }
+
+    .card-preview--bar iframe {
+      width: 1920px;
+      height: 198px;
+      transform: scale(0.156);
+      transform-origin: top left;
+    }
+
+    .card-preview--wide {
+      height: 120px;
+    }
+
+    .card-preview--wide iframe {
+      width: 1920px;
+      height: 674px;
+      transform: scale(0.156);
+      transform-origin: top left;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    footer a { color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>YAPILANLAR</h1>
+      <p>Seçili ekranlar ve özel demo linkleri. Kartlara tıklayın (yeni sekmede açılır).</p>
+      <div class="top-links">
+        <a href="/">← Ana menü</a>
+      </div>
+    </header>
+
+    <section>
+      <h2 class="section-title">Akıllı durak ekranı</h2>
+      <p class="section-sub">DURAK Klasörüne koyduğum.</p>
+      <div class="grid">
+        <a class="card card--visual" href="dikey-otobusum-nerde.html" target="_blank" rel="noopener">
+          <img class="card-thumb" src="dikey-otobusum-nerde.png" alt="Akıllı durak ekranı önizleme">
+          <p class="meta">Dikey · Referans görsel</p>
+          <h2>Akıllı Durak Ekranı</h2>
+          <p class="desc">Dikey otobüsüm nerede ekranı — tıklayınca tam dikey önizleme açılır.</p>
+          <span class="tag dikey">Dikey · Görsel</span>
+        </a>
+        <a class="card" href="ibb-akilli-durak.html" target="_blank" rel="noopener">
+          <p class="meta">Paper · 1080×1920 · İBB</p>
+          <h2>Paper — Akıllı Durak Ekranı</h2>
+          <p class="desc">Siyah-beyaz İBB dikey durak, sonraki seferler, dakika sayacı ve geldi animasyonu.</p>
+          <span class="tag dikey">Paper · Dikey · İBB</span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Stretched bar ekranları</h2>
+      <p class="section-sub">56.4" · 27.7" · 38"</p>
+      <div class="grid">
+        <a class="card card--visual" href="metrobus-hat.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--bar">
+            <iframe src="metrobus-hat.html" title="Metrobüs hat önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">56.4" · 3840×194</p>
+          <h2>Metrobüs — Avcılar · Zincirlikuyu</h2>
+          <p class="desc">Ultra geniş stretched bar rota animasyonu.</p>
+          <span class="tag">56.4" · Stretched bar</span>
+        </a>
+        <a class="card card--visual" href="27.7.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--bar">
+            <iframe src="27.7.html" title="27.7 hat ekranı önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">27.7" · 1920×198</p>
+          <h2>30M — Hat ekranı</h2>
+          <p class="desc">Mavi tema, hava paneli, 10 duraklı yatay ince hat şeridi.</p>
+          <span class="tag">27.7" · Stretched bar</span>
+        </a>
+        <a class="card card--visual" href="38inc.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--wide">
+            <iframe src="38inc.html" title="38 inch hat ekranı önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">38" · 1920×674</p>
+          <h2>458 — Avcılar · Gürpınar</h2>
+          <p class="desc">İETT sarısı, rota animasyonu ve duyuru bandı.</p>
+          <span class="tag">38" · Stretched bar</span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">43 inch curve ekran</h2>
+      <div class="grid">
+        <div class="card card--static">
+          <div class="card-placeholder">Üzerine videosu hazır</div>
+          <p class="meta">43" · Curve</p>
+          <h2>43 Inch Curve Ekran</h2>
+          <p class="desc">Kavisli 43 inch ekran — video hazır, yayın bekleniyor.</p>
+          <span class="tag dikey">43" · Curve</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Araç içi ekranlar</h2>
+      <p class="section-sub">19" · 29" · 32"</p>
+      <div class="grid">
+        <a class="card card--visual" href="sultangazi.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--yatay">
+            <iframe src="sultangazi.html" title="Sultangazi araç içi önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">19" · 1920×1080</p>
+          <h2>39 — Aksaray / Sultangazi Hattı</h2>
+          <p class="desc">Sultangazi Belediyesi araç içi ekranı, durak listesi ve duyuru bandı.</p>
+          <span class="tag bordo">19" · Araç içi</span>
+        </a>
+        <a class="card card--visual" href="istanbul.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--yatay">
+            <iframe src="istanbul.html" title="İstanbul araç içi önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">29" · 1920×1080</p>
+          <h2>34E — Taksim · Kadıköy</h2>
+          <p class="desc">İstanbul hat bilgi ekranı, güzergâh haritası ve durak animasyonu.</p>
+          <span class="tag">29" · Araç içi</span>
+        </a>
+        <a class="card card--visual" href="panel-dikey.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--dikey">
+            <iframe src="panel-dikey.html" title="Dikey panel önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">32" · 1080×1920</p>
+          <h2>İstanbul dikey bilgilendirme</h2>
+          <p class="desc">32 inch dikey bilgilendirme paneli, haber slaytları ve canlı saat.</p>
+          <span class="tag dikey">32" · Dikey</span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">10.1</h2>
+      <p class="section-sub">10.1" · 7" · Geri görüş ve güvenlik ekranı</p>
+      <div class="grid">
+        <a class="card card--visual" href="10.1-inch.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--10">
+            <iframe src="10.1-inch.html" title="10.1 inch geri görüş önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">10.1" · 1280×800</p>
+          <h2>Geri Görüş — Ana Ekran</h2>
+          <p class="desc">10.1 inch geri görüş ve güvenlik ekranı.</p>
+          <span class="tag">10.1" · Geri görüş</span>
+        </a>
+        <a class="card card--visual" href="10.1-1.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--7">
+            <iframe src="10.1-1.html" title="7 inch geri görüş 1 önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">7" · 1024×600 · Ekran 1</p>
+          <h2>Geri Görüş — Ekran 1</h2>
+          <p class="desc">7 inch geri görüş ve güvenlik ekranı.</p>
+          <span class="tag">7" · 10.1</span>
+        </a>
+        <a class="card card--visual" href="10.1-2.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--7">
+            <iframe src="10.1-2.html" title="7 inch geri görüş 2 önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">7" · 1024×600 · Ekran 2</p>
+          <h2>Geri Görüş — Ekran 2</h2>
+          <p class="desc">7 inch geri görüş ve güvenlik ekranı.</p>
+          <span class="tag">7" · 10.1</span>
+        </a>
+        <a class="card card--visual" href="10.1-3.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--7">
+            <iframe src="10.1-3.html" title="7 inch geri görüş 3 önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">7" · 1024×600 · Ekran 3</p>
+          <h2>Geri Görüş — Ekran 3</h2>
+          <p class="desc">7 inch geri görüş ve güvenlik ekranı.</p>
+          <span class="tag">7" · 10.1</span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Araç içi sol taraf ekranlar</h2>
+      <p class="section-sub">23.8" · 21.5" · 19" · 15.6"</p>
+      <div class="grid">
+        <a class="card card--visual" href="23.8-iett.html" target="_blank" rel="noopener">
+          <img class="card-thumb" src="iett-arac-ici-render.jpg" alt="İETT araç içi render görüntüsü">
+          <p class="meta">23.8" · 1920×1080 · Sol taraf</p>
+          <h2>İETT araç içi — 500T</h2>
+          <p class="desc">İETT sarı temalı araç içi ekran, güzergâh ve durak bilgisi.</p>
+          <span class="tag">23.8" · İETT · Sol taraf</span>
+        </a>
+        <a class="card card--visual" href="23.8.html" target="_blank" rel="noopener">
+          <img class="card-thumb" src="kirmizi-arac-ici-duraklar.jpg" alt="Kırmızı araç içi duraklar">
+          <p class="meta">23.8" · 1920×1080 · Sol taraf</p>
+          <h2>Metrobüs araç içi — 34</h2>
+          <p class="desc">Turkuaz-mavi metrobüs araç içi, sonraki durak paneli.</p>
+          <span class="tag bordo">23.8" · Metrobüs · Sol taraf</span>
+        </a>
+        <a class="card card--visual" href="19-sol.html" target="_blank" rel="noopener">
+          <img class="card-thumb" src="79g.png" alt="79G araç içi sol taraf">
+          <p class="meta">19" · 1920×1080 · Sol taraf</p>
+          <h2>Üsküdar belediye — 130</h2>
+          <p class="desc">Lacivert tema, Üsküdar — Bağcılar hattı, videosuz durak ekranı.</p>
+          <span class="tag dikey">19" · Belediye · Sol taraf</span>
+        </a>
+        <a class="card" href="19-kucukcekmece-sol.html" target="_blank" rel="noopener">
+          <p class="meta">19" · 1920×1080 · Sol taraf</p>
+          <h2>Küçükçekmece belediye — 92C</h2>
+          <p class="desc">Turuncu tema, Küçükçekmece — Taksim hattı, videosuz durak ekranı.</p>
+          <span class="tag turuncu">19" · Belediye · Sol taraf</span>
+        </a>
+        <a class="card" href="21.5-iett-sol.html" target="_blank" rel="noopener">
+          <p class="meta">21.5" · 1920×1080 · Sol taraf</p>
+          <h2>İETT araç içi — 34E</h2>
+          <p class="desc">Sultangazi şablonu, İETT sarısı, Taksim — Kadıköy hattı, videosuz.</p>
+          <span class="tag">21.5" · İETT · Sol taraf</span>
+        </a>
+        <a class="card" href="21.5-bordo-sol.html" target="_blank" rel="noopener">
+          <p class="meta">21.5" · 1920×1080 · Sol taraf</p>
+          <h2>Şişli belediye — 55T</h2>
+          <p class="desc">Bordo-kırmızı tema, Şişli — Taksim hattı, videosuz durak ekranı.</p>
+          <span class="tag bordo">21.5" · Belediye · Sol taraf</span>
+        </a>
+        <a class="card" href="15.6-yesil-sol.html" target="_blank" rel="noopener">
+          <p class="meta">15.6" · 1920×1080 · Sol taraf</p>
+          <h2>Beykoz belediye — 15B</h2>
+          <p class="desc">Yeşil tema, Beykoz — Kavacık hattı, videosuz durak ekranı.</p>
+          <span class="tag yesil">15.6" · Belediye · Sol taraf</span>
+        </a>
+        <a class="card" href="15.6-turkuaz-sol.html" target="_blank" rel="noopener">
+          <p class="meta">15.6" · 1920×1080 · Sol taraf</p>
+          <h2>Maltepe belediye — 18Y</h2>
+          <p class="desc">Turkuaz tema, Maltepe — Eminönü hattı, videosuz durak ekranı.</p>
+          <span class="tag turkuaz">15.6" · Belediye · Sol taraf</span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Outdoor akıllı durak ekranları</h2>
+      <p class="section-sub">27" · 21.5"</p>
+      <div class="grid">
+        <a class="card card--visual" href="outdoor-27.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--dikey">
+            <iframe src="outdoor-27.html" title="27 inch outdoor akıllı durak önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">27" · 1080×1920 · Outdoor</p>
+          <h2>İETT akıllı durak — Mecidiyeköy</h2>
+          <p class="desc">31.5 şablonu, İETT sarısı, dikey outdoor akıllı durak ekranı.</p>
+          <span class="tag">27" · Outdoor · İETT</span>
+        </a>
+        <a class="card card--visual" href="outdoor-21.5.html" target="_blank" rel="noopener">
+          <div class="card-preview card-preview--dikey">
+            <iframe src="outdoor-21.5.html" title="21.5 inch outdoor akıllı durak önizleme" loading="lazy" tabindex="-1"></iframe>
+          </div>
+          <p class="meta">21.5" · 1080×1920 · Outdoor</p>
+          <h2>Akıllı durak — mavi tema</h2>
+          <p class="desc">43durak mavi şablonu, dikey outdoor akıllı durak ekranı.</p>
+          <span class="tag dikey">21.5" · Outdoor · Mavi</span>
+        </a>
+      </div>
+    </section>
+
+    <footer>
+      <p><a href="/">Ana menüye dön</a></p>
+    </footer>
+  </div>
+</body>
+</html>
