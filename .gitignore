@@ -2,5 +2,6 @@ node_modules/
 export/
 .DS_Store
 
-# GitHub 100MB dosya limiti — videolar yerelde tutulur
+# GitHub 100MB dosya limiti — büyük videolar yerelde tutulur
 *.mp4
+!galata.mp4
