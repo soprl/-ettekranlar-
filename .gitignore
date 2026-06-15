@@ -5,3 +5,4 @@ export/
 # GitHub 100MB dosya limiti — büyük videolar yerelde tutulur
 *.mp4
 !galata.mp4
+!dikey-otobusum-nerde.mp4

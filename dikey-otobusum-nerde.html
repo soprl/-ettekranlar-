@@ -34,28 +34,36 @@
       box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
     }
 
-    .screen img {
+    .screen video {
       width: 100%;
       height: 100%;
       display: block;
       object-fit: contain;
       object-position: center top;
-      background: #fff;
+      background: #000;
     }
   </style>
 </head>
 <body>
   <div class="viewport">
     <div class="screen" id="screen">
-      <img src="dikey-otobusum-nerde.png" alt="Akıllı durak ekranı — dikey önizleme">
+      <video src="dikey-otobusum-nerde.mp4" autoplay muted loop playsinline preload="auto" aria-label="Akıllı durak ekranı — dikey önizleme"></video>
     </div>
   </div>
   <script>
     const screen = document.getElementById('screen');
+    const player = screen.querySelector('video');
+
     function fit() {
       const s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920, 1);
       screen.style.transform = `scale(${s})`;
     }
+
+    const playPromise = player.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {});
+    }
+
     fit();
     window.addEventListener('resize', fit);
   </script>
